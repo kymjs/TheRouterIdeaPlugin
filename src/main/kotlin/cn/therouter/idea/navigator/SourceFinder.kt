@@ -25,15 +25,10 @@ fun getRouteAnnotationCode(element: PsiElement): TargetContent? {
 }
 
 fun getActionInterceptorCode(psiElement: PsiElement): TargetContent? {
-    if (psiElement.javaClass.name == "org.jetbrains.kotlin.psi.KtDotQualifiedExpression"
-        || psiElement.javaClass.name == "com.intellij.psi.impl.source.tree.java.PsiMethodCallExpressionImpl"
-        || psiElement.javaClass.name == "com.intellij.psi.impl.source.tree.java.PsiReferenceExpressionImpl"
-    ) {
-        if (isTheRouterAddActionInterceptor(psiElement)) {
-            val path = matchActionInterceptor(psiElement.text)
-            if (path.isNotBlank()) {
-                return TargetContent(TYPE_ACTION, path)
-            }
+    if (isTheRouterAddActionInterceptor(psiElement)) {
+        val path = matchActionInterceptor(psiElement.text)
+        if (path.isNotBlank()) {
+            return TargetContent(TYPE_ACTION, path)
         }
     }
     return null
@@ -70,11 +65,11 @@ fun isTheRouterBuild(psiElement: PsiElement, path: String = ""): Boolean {
 
 fun isTheRouterAddActionInterceptor(psiElement: PsiElement, path: String = ""): Boolean {
     val content = psiElement.text.replace(" ", "").replace("\n", "")
-
     return if (path.isEmpty()) {
-        content.contains("TheRouter.addActionInterceptor(")
+        content.contains("TheRouter.addActionInterceptor(") || content.contains("@ActionInterceptor(actionName=")
     } else {
-        content.contains(Regex("TheRouter.addActionInterceptor\\(\\S*${handlePath(path)},"))
+        content.contains(Regex("TheRouter.addActionInterceptor\\(\\S*${handlePath(path)},")) ||
+                content.contains(Regex("@ActionInterceptor\\(actionName=\\S*${handlePath(path)}"))
     }
 }
 

@@ -93,8 +93,10 @@ class TheRouterLineMarker : LineMarkerProvider {
                             val path = targetContent.content
                             if (!path.contains('"') && !path.isFirstUpper()) {
                                 builder.setTooltipTitle("变量 ${targetContent.content} 内容未知，请开发者检查是否定义路由")
-                            } else {
+                            } else if (targetContent.type == TYPE_ANNOTATION) {
                                 builder.setTooltipTitle("未声明 @Route(path=${targetContent.content})")
+                            } else if (targetContent.type == TYPE_ACTION) {
+                                builder.setTooltipTitle("未定义 ActionInterceptor(${targetContent.content})")
                             }
                         }
                         result.add(builder.createLineMarkerInfo(psiElement))
