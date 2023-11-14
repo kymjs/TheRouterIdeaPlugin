@@ -59,9 +59,10 @@ fun getNavigationCode(psiElement: PsiElement): TargetContent? {
 fun isTheRouterBuild(psiElement: PsiElement, path: String = ""): Boolean {
     val content = psiElement.text.replace(" ", "").replace("\n", "")
     val contains = if (path.isEmpty()) {
-        content.contains("TheRouter.build(")
+        content.startsWith("TheRouter.build(")
     } else {
-        content.contains(Regex("TheRouter.build\\(\\S*${handlePath(path)}\\)"))
+        content.startsWith("TheRouter.build(") &&
+                content.contains(Regex("TheRouter.build\\(\\S*${handlePath(path)}\\)"))
     }
 
     return contains && content.startsWith("TheRouter.build(")
@@ -78,10 +79,12 @@ fun isTheRouterBuild(psiElement: PsiElement, path: String = ""): Boolean {
 fun isTheRouterAddActionInterceptor(psiElement: PsiElement, path: String = ""): Boolean {
     val content = psiElement.text.replace(" ", "").replace("\n", "")
     return if (path.isEmpty()) {
-        content.contains("TheRouter.addActionInterceptor(") || content.contains("@ActionInterceptor(actionName=")
+        content.startsWith("TheRouter.addActionInterceptor(") || content.startsWith("@ActionInterceptor(actionName=")
     } else {
-        content.contains(Regex("TheRouter.addActionInterceptor\\(\\S*${handlePath(path)},")) ||
-                content.contains(Regex("@ActionInterceptor\\(actionName=\\S*${handlePath(path)}"))
+        (content.startsWith("TheRouter.addActionInterceptor(")
+                && content.contains(Regex("TheRouter.addActionInterceptor\\(\\S*${handlePath(path)},")))
+                || (content.startsWith("@ActionInterceptor(actionName=")
+                && content.contains(Regex("@ActionInterceptor\\(actionName=\\S*${handlePath(path)}")))
     }
 }
 
