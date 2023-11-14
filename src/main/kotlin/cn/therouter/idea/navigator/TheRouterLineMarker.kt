@@ -21,7 +21,11 @@ const val STATUS_SHOWN = 2
 class TheRouterLineMarker : LineMarkerProvider {
 
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? = null
+
+    // 行标记跳转的目标代码
     private val allTargetPsi = HashMap<String, HashSet<TargetPsiElement>>()
+
+    // 需要加行标记的代码
     private val allMarkerPsi = HashMap<String, Pair<PsiElement, TargetContent>>()
 
     override fun collectSlowLineMarkers(
@@ -37,7 +41,7 @@ class TheRouterLineMarker : LineMarkerProvider {
             try {
                 findCode(psiElement)?.let { targetContent ->
                     try {
-                        val key = filePath + TargetPsiElement(psiElement, "").getKey()
+                        val key = getKey(filePath, psiElement)
                         allMarkerPsi[key] = Pair(psiElement, targetContent)
                         val targetPsiSet = allTargetPsi[key] ?: HashSet()
                         findAllTargetPsi(elements[0].project, filePath, targetContent).forEach { newFind ->
@@ -52,60 +56,58 @@ class TheRouterLineMarker : LineMarkerProvider {
                             }
                         }
                         allTargetPsi[key] = targetPsiSet
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
             }
         }
 
-        val allMarkerStatus = HashMap<String, Int>()
         elements.forEach { element ->
-            val key = filePath + TargetPsiElement(element, "").getKey()
+            val key = getKey(filePath, element)
             allMarkerPsi[key]?.let { pair ->
                 val psiElement = pair.first
                 val targetContent = pair.second
 
                 val all = allTargetPsi[key] ?: HashSet()
                 if (all.isNotEmpty()) {
-                    if (allMarkerStatus[key] != STATUS_SHOWN) {
-                        allMarkerStatus[key] = STATUS_SHOWN
-                        val builder = NavigationGutterIconBuilder.create(getIcon(targetContent.type))
-                        builder.setAlignment(GutterIconRenderer.Alignment.CENTER)
-                        builder.setTargets(all)
-                        if (targetContent.type == TYPE_ANNOTATION || targetContent.type == TYPE_ACTION) {
-                            builder.setTooltipTitle("TheRouter:跳转到使用处")
-                        } else {
-                            builder.setTooltipTitle("TheRouter:跳转到声明处")
-                        }
-                        result.add(builder.createLineMarkerInfo(psiElement))
+                    val builder = NavigationGutterIconBuilder.create(getIcon(targetContent.type))
+                    builder.setAlignment(GutterIconRenderer.Alignment.CENTER)
+                    builder.setTargets(all)
+                    if (targetContent.type == TYPE_ROUTE_ANNOTATION || targetContent.type == TYPE_ACTION_INTERCEPT) {
+                        builder.setTooltipTitle("TheRouter:跳转到使用处")
+                    } else {
+                        builder.setTooltipTitle("TheRouter:跳转到声明处")
                     }
+                    result.add(builder.createLineMarkerInfo(psiElement))
                 } else {
-                    if (!allMarkerStatus.containsKey(key)) {
-                        allMarkerStatus[key] = STATUS_ERROR
-                        val builder = NavigationGutterIconBuilder.create(getIcon(TYPE_NONE))
-                            .setAlignment(GutterIconRenderer.Alignment.CENTER)
-                            .setTargets(listOf())
+                    val builder = NavigationGutterIconBuilder.create(getIcon(TYPE_NONE))
+                        .setAlignment(GutterIconRenderer.Alignment.CENTER)
+                        .setTargets(listOf())
 
-                        if (targetContent.type == TYPE_ANNOTATION || targetContent.type == TYPE_ACTION) {
-                            builder.setTooltipTitle("未发现使用:TheRouter.build(${targetContent.content})")
+                    if (targetContent.type == TYPE_ROUTE_ANNOTATION || targetContent.type == TYPE_ACTION_INTERCEPT) {
+                        builder.setTooltipTitle("未发现使用:TheRouter.build(${targetContent.code})")
+                    } else {
+                        val path = targetContent.code
+                        if (!path.contains('"') && !path.isFirstUpper()) {
+                            builder.setTooltipTitle("变量 ${targetContent.code} 内容未知，请开发者检查是否定义路由")
                         } else {
-                            val path = targetContent.content
-                            if (!path.contains('"') && !path.isFirstUpper()) {
-                                builder.setTooltipTitle("变量 ${targetContent.content} 内容未知，请开发者检查是否定义路由")
-                            } else if (targetContent.type == TYPE_ANNOTATION) {
-                                builder.setTooltipTitle("未声明 @Route(path=${targetContent.content})")
-                            } else if (targetContent.type == TYPE_ACTION) {
-                                builder.setTooltipTitle("未定义 ActionInterceptor(${targetContent.content})")
+                            if (psiElement.text.contains("action(")) {
+                                builder.setTooltipTitle("未定义 ActionInterceptor(${targetContent.code})")
+                            } else {
+                                builder.setTooltipTitle("未声明 @Route(path=${targetContent.code})")
                             }
                         }
-                        result.add(builder.createLineMarkerInfo(psiElement))
                     }
+                    result.add(builder.createLineMarkerInfo(psiElement))
                 }
             }
         }
     }
 
+    /**
+     * 查找当前psi是否为TheRouter相关API
+     */
     private fun findCode(psiElement: PsiElement): TargetContent? {
         var target = getRouteAnnotationCode(psiElement)
         if (target == null) {
@@ -117,12 +119,15 @@ class TheRouterLineMarker : LineMarkerProvider {
         return target
     }
 
+    /**
+     * 查找入参 targetContent，能跳转到的目标代码
+     */
     private fun findAllTargetPsi(
         project: Project,
         filePath: String?,
-        target: TargetContent
+        content: TargetContent
     ): Collection<TargetPsiElement> {
-        val allTargetPsi = HashSet<TargetPsiElement>()
+        val result = HashSet<TargetPsiElement>()
         val scopes = GlobalSearchScope.projectScope(project)
         val kotlinFiles = FilenameIndex.getAllFilesByExt(project, "kt", scopes)
         val javaFiles = FilenameIndex.getAllFilesByExt(project, "java", scopes)
@@ -140,32 +145,35 @@ class TheRouterLineMarker : LineMarkerProvider {
 
             val properties = PsiTreeUtil.findChildrenOfType(psiFile, PsiElement::class.java)
             properties.forEach { psiElement ->
-
-                when (target.type) {
-                    TYPE_ANNOTATION -> {
-                        if (isTheRouterBuild(psiElement, target.content)) {
-                            allTargetPsi.add(TargetPsiElement(psiElement, psiFile.name))
-                            debug("findAllTargetPsi", "找到注解使用方：" + target.content)
+                // 根据当前content类型，查找需要跳转的目标代码
+                when (content.type) {
+                    TYPE_ROUTE_ANNOTATION -> {
+                        if (isTheRouterBuild(psiElement, content.code)) {
+                            result.add(TargetPsiElement(psiElement, psiFile.name))
+                            debug("findAllTargetPsi", "找到注解使用方：" + content.code)
                         }
                     }
 
-                    TYPE_NAVIGATION -> {
-                        if (isRouteAnnotation(psiElement, target.content)) {
-                            allTargetPsi.add(TargetPsiElement(psiElement, psiFile.name))
-                            debug("findAllTargetPsi", "找到path声明：" + target.content)
+                    TYPE_THEROUTER_BUILD -> {
+                        if (isRouteAnnotation(psiElement, content.code)) {
+                            result.add(TargetPsiElement(psiElement, psiFile.name))
+                            debug("findAllTargetPsi", "找到path声明：" + content.code)
+                        } else if (isTheRouterAddActionInterceptor(psiElement, content.code)) {
+                            result.add(TargetPsiElement(psiElement, psiFile.name))
+                            debug("findAllTargetPsi", "找到Action拦截：" + content.code)
                         }
                     }
 
-                    TYPE_ACTION -> {
-                        if (isTheRouterAddActionInterceptor(psiElement, target.content)) {
-                            allTargetPsi.add(TargetPsiElement(psiElement, psiFile.name))
-                            debug("findAllTargetPsi", "找到Action拦截：" + target.content)
+                    TYPE_ACTION_INTERCEPT -> {
+                        if (isTheRouterBuild(psiElement, content.code)) {
+                            result.add(TargetPsiElement(psiElement, psiFile.name))
+                            debug("findAllTargetPsi", "找到Action使用方：" + content.code)
                         }
                     }
                 }
             }
         }
-        return allTargetPsi
+        return result
     }
 
 
@@ -174,4 +182,6 @@ class TheRouterLineMarker : LineMarkerProvider {
         val temp = substring(0, 1)
         return temp == temp.uppercase(Locale.getDefault())
     }
+
+    private fun getKey(filePath: String?, psiElement: PsiElement) = filePath + TargetPsiElement(psiElement, "").getKey()
 }

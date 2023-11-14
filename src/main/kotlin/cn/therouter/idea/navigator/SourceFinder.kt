@@ -2,6 +2,9 @@ package cn.therouter.idea.navigator
 
 import com.intellij.psi.PsiElement
 
+/**
+ * 返回路由注解相关代码
+ */
 fun getRouteAnnotationCode(element: PsiElement): TargetContent? {
     if (isRouteAnnotation(element)) {
         val content = element.text.replace(" ", "")
@@ -18,32 +21,41 @@ fun getRouteAnnotationCode(element: PsiElement): TargetContent? {
             }
         }
         if (path.isNotBlank()) {
-            return TargetContent(TYPE_ANNOTATION, path)
+            return TargetContent(TYPE_ROUTE_ANNOTATION, path)
         }
     }
     return null
 }
 
+/**
+ * 返回ActionManager拦截器代码
+ */
 fun getActionInterceptorCode(psiElement: PsiElement): TargetContent? {
     if (isTheRouterAddActionInterceptor(psiElement)) {
         val path = matchActionInterceptor(psiElement.text)
         if (path.isNotBlank()) {
-            return TargetContent(TYPE_ACTION, path)
+            return TargetContent(TYPE_ACTION_INTERCEPT, path)
         }
     }
     return null
 }
 
+/**
+ * 返回 TheRouter.build(xxxx) 代码
+ */
 fun getNavigationCode(psiElement: PsiElement): TargetContent? {
     if (isTheRouterBuild(psiElement)) {
         val path = matchBuild(psiElement.text.replace(" ", ""))
         if (path.isNotBlank()) {
-            return TargetContent(TYPE_NAVIGATION, path)
+            return TargetContent(TYPE_THEROUTER_BUILD, path)
         }
     }
     return null
 }
 
+/**
+ * 查找是否为TheRouter.build(xxxx)
+ */
 fun isTheRouterBuild(psiElement: PsiElement, path: String = ""): Boolean {
     val content = psiElement.text.replace(" ", "").replace("\n", "")
     val contains = if (path.isEmpty()) {
