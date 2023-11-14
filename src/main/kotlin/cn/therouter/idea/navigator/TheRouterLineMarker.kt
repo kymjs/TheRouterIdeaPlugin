@@ -119,6 +119,8 @@ class TheRouterLineMarker : LineMarkerProvider {
         return target
     }
 
+    private var fileSystemCache = HashSet<Cache>()
+
     /**
      * 查找入参 targetContent，能跳转到的目标代码
      */
@@ -128,47 +130,54 @@ class TheRouterLineMarker : LineMarkerProvider {
         content: TargetContent
     ): Collection<TargetPsiElement> {
         val result = HashSet<TargetPsiElement>()
-        val scopes = GlobalSearchScope.projectScope(project)
-        val kotlinFiles = FilenameIndex.getAllFilesByExt(project, "kt", scopes)
-        val javaFiles = FilenameIndex.getAllFilesByExt(project, "java", scopes)
-        val allCodeFiles = ArrayList(kotlinFiles)
-        allCodeFiles.addAll(javaFiles)
-        if (allCodeFiles.isNullOrEmpty()) {
-            return HashSet()
-        }
-        for (virtualFile in allCodeFiles) {
-            if (virtualFile.canonicalPath == filePath) {
-                continue
+
+        if (fileSystemCache.isEmpty()) {
+            val scopes = GlobalSearchScope.projectScope(project)
+            val kotlinFiles = FilenameIndex.getAllFilesByExt(project, "kt", scopes)
+            val javaFiles = FilenameIndex.getAllFilesByExt(project, "java", scopes)
+            val allCodeFiles = ArrayList(kotlinFiles)
+            allCodeFiles.addAll(javaFiles)
+            if (allCodeFiles.isNullOrEmpty()) {
+                return HashSet()
             }
-            val psiFile: PsiFile? = PsiManager.getInstance(project).findFile(virtualFile)
-            psiFile ?: return HashSet()
+            for (virtualFile in allCodeFiles) {
+                if (virtualFile.canonicalPath == filePath) {
+                    continue
+                }
+                val psiFile: PsiFile? = PsiManager.getInstance(project).findFile(virtualFile)
+                psiFile ?: return HashSet()
 
-            val properties = PsiTreeUtil.findChildrenOfType(psiFile, PsiElement::class.java)
-            properties.forEach { psiElement ->
-                // 根据当前content类型，查找需要跳转的目标代码
-                when (content.type) {
-                    TYPE_ROUTE_ANNOTATION -> {
-                        if (isTheRouterBuild(psiElement, content.code)) {
-                            result.add(TargetPsiElement(psiElement, psiFile.name))
-                            debug("findAllTargetPsi", "找到注解使用方：" + content.code)
-                        }
+                val properties = PsiTreeUtil.findChildrenOfType(psiFile, PsiElement::class.java)
+                properties.forEach {
+                    fileSystemCache.add(Cache(it, psiFile.name))
+                }
+            }
+        }
+
+        fileSystemCache.forEach { cache ->
+            // 根据当前content类型，查找需要跳转的目标代码
+            when (content.type) {
+                TYPE_ROUTE_ANNOTATION -> {
+                    if (isTheRouterBuild(cache.psiElement, content.code)) {
+                        result.add(TargetPsiElement(cache.psiElement, cache.className))
+                        debug("findAllTargetPsi", "找到注解使用方：" + content.code)
                     }
+                }
 
-                    TYPE_THEROUTER_BUILD -> {
-                        if (isRouteAnnotation(psiElement, content.code)) {
-                            result.add(TargetPsiElement(psiElement, psiFile.name))
-                            debug("findAllTargetPsi", "找到path声明：" + content.code)
-                        } else if (isTheRouterAddActionInterceptor(psiElement, content.code)) {
-                            result.add(TargetPsiElement(psiElement, psiFile.name))
-                            debug("findAllTargetPsi", "找到Action拦截：" + content.code)
-                        }
+                TYPE_THEROUTER_BUILD -> {
+                    if (isRouteAnnotation(cache.psiElement, content.code)) {
+                        result.add(TargetPsiElement(cache.psiElement, cache.className))
+                        debug("findAllTargetPsi", "找到path声明：" + content.code)
+                    } else if (isTheRouterAddActionInterceptor(cache.psiElement, content.code)) {
+                        result.add(TargetPsiElement(cache.psiElement, cache.className))
+                        debug("findAllTargetPsi", "找到Action拦截：" + content.code)
                     }
+                }
 
-                    TYPE_ACTION_INTERCEPT -> {
-                        if (isTheRouterBuild(psiElement, content.code)) {
-                            result.add(TargetPsiElement(psiElement, psiFile.name))
-                            debug("findAllTargetPsi", "找到Action使用方：" + content.code)
-                        }
+                TYPE_ACTION_INTERCEPT -> {
+                    if (isTheRouterBuild(cache.psiElement, content.code)) {
+                        result.add(TargetPsiElement(cache.psiElement, cache.className))
+                        debug("findAllTargetPsi", "找到Action使用方：" + content.code)
                     }
                 }
             }
