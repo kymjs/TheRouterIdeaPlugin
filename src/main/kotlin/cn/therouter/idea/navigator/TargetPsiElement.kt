@@ -2,15 +2,13 @@ package cn.therouter.idea.navigator
 
 import com.intellij.psi.PsiElement
 
-open class TargetPsiElement(private val delegate: PsiElement, private val className: String) : PsiElement by delegate {
+open class TargetPsiElement(private val delegate: PsiElement) : PsiElement by delegate {
 
-    fun getKey(): String {
-        return delegate.text.replace(" ", "").replace("\n", "")
-    }
+    fun getKey() = delegate.getKey()
 
     override fun getText(): String {
-        val prefix = className
-        val text = getKey()
+        val prefix = delegate.containingFile.name
+        val text = delegate.getKey()
         val suffix = if (text.length > 80) {
             "${text.subSequence(0, 80)}..."
         } else {
@@ -18,4 +16,30 @@ open class TargetPsiElement(private val delegate: PsiElement, private val classN
         }
         return "$prefix: $suffix"
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as TargetPsiElement
+
+        if (text != other.text) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        val result = text.hashCode()
+        return 31 * result
+    }
+}
+
+fun PsiElement.getKey(): String {
+    return text.replace(" ", "").replace("\n", "")
+}
+
+fun PsiElement.toTargetPsi() = if (this is TargetPsiElement) {
+    this
+} else {
+    TargetPsiElement(this)
 }
