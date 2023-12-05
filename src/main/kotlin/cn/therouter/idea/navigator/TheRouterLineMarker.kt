@@ -5,7 +5,7 @@ import com.intellij.codeInsight.daemon.LineMarkerProvider
 import com.intellij.psi.PsiElement
 import com.intellij.util.containers.isNullOrEmpty
 
-private val utils1 = LineMarkerUtils1()
+private val utils1 = LineMarkerUtils3()
 
 class TheRouterLineMarker : LineMarkerProvider {
 
