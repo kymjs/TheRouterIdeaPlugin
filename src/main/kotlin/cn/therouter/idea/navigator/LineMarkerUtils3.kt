@@ -4,11 +4,13 @@ import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
 import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
+import java.util.concurrent.CopyOnWriteArrayList
 
 class LineMarkerUtils3 {
 
@@ -32,7 +34,8 @@ class LineMarkerUtils3 {
                         val key = getKey(filePath, psiElement)
                         allMarkerPsi[key] = targetContent
                         val targetPsiSet = allTargetPsi[key] ?: HashSet()
-                        findAllTargetPsi(elements[0].project, filePath, targetContent).forEach { newFind ->
+                        val list = findAllTargetPsi(elements[0].project, filePath, targetContent)
+                        list.forEach { newFind ->
                             var exists = false
                             targetPsiSet.forEach { target ->
                                 if (newFind.text == target.text) {
@@ -54,7 +57,6 @@ class LineMarkerUtils3 {
         elements.forEach { element ->
             val key = getKey(filePath, element)
             allMarkerPsi[key]?.let { targetContent ->
-
                 val all = allTargetPsi[key] ?: HashSet()
                 if (all.isNotEmpty()) {
                     val builder = NavigationGutterIconBuilder.create(getIcon(targetContent.type))
@@ -106,6 +108,8 @@ class LineMarkerUtils3 {
         return target
     }
 
+    private val allCodeFiles = CopyOnWriteArrayList<VirtualFile>()
+
     /**
      * 查找入参 targetContent，能跳转到的目标代码
      */
@@ -115,12 +119,24 @@ class LineMarkerUtils3 {
         content: CodeWrapper
     ): Collection<TargetPsiElement> {
         val result = HashSet<TargetPsiElement>()
-
-        val scopes = GlobalSearchScope.projectScope(project)
-        val kotlinFiles = FilenameIndex.getAllFilesByExt(project, "kt", scopes)
-        val javaFiles = FilenameIndex.getAllFilesByExt(project, "java", scopes)
-        val allCodeFiles = ArrayList(kotlinFiles)
-        allCodeFiles.addAll(javaFiles)
+        if (allCodeFiles.isEmpty()) {
+            val scopes = GlobalSearchScope.projectScope(project)
+            val kotlinFiles = FilenameIndex.getAllFilesByExt(project, "kt", scopes)
+            val javaFiles = FilenameIndex.getAllFilesByExt(project, "java", scopes)
+            allCodeFiles.addAll(kotlinFiles)
+            allCodeFiles.addAll(javaFiles)
+        } else {
+            Thread {
+                val scopes = GlobalSearchScope.projectScope(project)
+                val kotlinFiles = FilenameIndex.getAllFilesByExt(project, "kt", scopes)
+                val javaFiles = FilenameIndex.getAllFilesByExt(project, "java", scopes)
+                synchronized(allCodeFiles) {
+                    allCodeFiles.clear()
+                    allCodeFiles.addAll(kotlinFiles)
+                    allCodeFiles.addAll(javaFiles)
+                }
+            }.start()
+        }
         for (virtualFile in allCodeFiles) {
             if (virtualFile.canonicalPath == filePath) {
                 continue
@@ -134,24 +150,20 @@ class LineMarkerUtils3 {
                         TYPE_ROUTE_ANNOTATION -> {
                             if (isTheRouterBuild(psiElement, content.code)) {
                                 result.add(TargetPsiElement(psiElement))
-                                debug("findAllTargetPsi", "找到注解使用方：" + content.code)
                             }
                         }
 
                         TYPE_THEROUTER_BUILD -> {
                             if (isRouteAnnotation(psiElement, content.code)) {
                                 result.add(TargetPsiElement(psiElement))
-                                debug("findAllTargetPsi", "找到path声明：" + content.code)
                             } else if (isTheRouterAddActionInterceptor(psiElement, content.code)) {
                                 result.add(TargetPsiElement(psiElement))
-                                debug("findAllTargetPsi", "找到Action拦截：" + content.code)
                             }
                         }
 
                         TYPE_ACTION_INTERCEPT -> {
                             if (isTheRouterBuild(psiElement, content.code)) {
                                 result.add(TargetPsiElement(psiElement))
-                                debug("findAllTargetPsi", "找到Action使用方：" + content.code)
                             }
                         }
                     }

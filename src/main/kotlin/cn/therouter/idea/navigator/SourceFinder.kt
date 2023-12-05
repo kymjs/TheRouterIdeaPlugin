@@ -3,6 +3,8 @@ package cn.therouter.idea.navigator
 import com.intellij.psi.PsiElement
 import java.util.*
 
+val therouterCodeCache = HashMap<String, Boolean>()
+
 /**
  * 返回路由注解相关代码
  */
@@ -56,13 +58,17 @@ fun getTheRouterBuildCode(psiElement: PsiElement): CodeWrapper? {
  */
 fun isTheRouterBuild(psiElement: PsiElement, path: String = ""): Boolean {
     val content = psiElement.getKey()
+    val cache = therouterCodeCache["isTheRouterBuild$content$path"]
+    if (cache != null) {
+        return cache
+    }
     val contains = if (path.isEmpty()) {
         content.startsWith("TheRouter.build(")
     } else {
         content.contains(Regex("TheRouter.build\\((\\S*\\.)*${handlePath(path)}\\)"))
     }
 
-    return contains && content.startsWith("TheRouter.build(")
+    val result = contains && content.startsWith("TheRouter.build(")
             && content.endsWith(")")
             && (content.contains("navigation") ||
             content.contains("action") ||
@@ -71,11 +77,20 @@ fun isTheRouterBuild(psiElement: PsiElement, path: String = ""): Boolean {
             content.contains("createIntentWithCallback") ||
             content.contains("createFragmentWithCallback") ||
             content.contains("getUrlWithParams"))
+    therouterCodeCache["isTheRouterBuild$content$path"] = result
+    if (result && path.isNotEmpty()) {
+        therouterCodeCache["isTheRouterBuild$content"] = true
+    }
+    return result
 }
 
 fun isTheRouterAddActionInterceptor(psiElement: PsiElement, path: String = ""): Boolean {
     val content = psiElement.getKey()
-    return if (path.isEmpty()) {
+    val cache = therouterCodeCache["isTheRouterAddActionInterceptor$content$path"]
+    if (cache != null) {
+        return cache
+    }
+    val result = if (path.isEmpty()) {
         content.startsWith("TheRouter.addActionInterceptor(") || content.startsWith("@ActionInterceptor(actionName=")
     } else {
         (content.startsWith("TheRouter.addActionInterceptor(")
@@ -83,22 +98,35 @@ fun isTheRouterAddActionInterceptor(psiElement: PsiElement, path: String = ""): 
                 || (content.startsWith("@ActionInterceptor(actionName=")
                 && content.contains(Regex("@ActionInterceptor\\(actionName=(\\S*\\.)*${handlePath(path)}")))
     }
+    therouterCodeCache["isTheRouterAddActionInterceptor$content$path"] = result
+    if (result && path.isNotEmpty()) {
+        therouterCodeCache["isTheRouterAddActionInterceptor$content"] = true
+    }
+    return result
 }
 
 fun isRouteAnnotation(psiElement: PsiElement, path: String = ""): Boolean {
     val content = psiElement.getKey()
+    val cache = therouterCodeCache["isRouteAnnotation$content$path"]
+    if (cache != null) {
+        return cache
+    }
     val containPath = if (path.isEmpty()) {
         content.contains("path=")
     } else {
         content.contains(Regex("path=(\\S*\\.)*${handlePath(path)},"))
                 || content.contains(Regex("path=(\\S*\\.)*${handlePath(path)}\\)"))
     }
-
+    var result = false
     if (containPath && content.startsWith("@Route(") && content.endsWith(")")) {
         val str = content.replaceFirst("@Route(", "").replaceFirst(")", "")
-        return !str.contains("@Route") && !str.contains(")")
+        result = !str.contains("@Route") && !str.contains(")")
     }
-    return false
+    therouterCodeCache["isRouteAnnotation$content$path"] = result
+    if (result && path.isNotEmpty()) {
+        therouterCodeCache["isRouteAnnotation$content"] = true
+    }
+    return result
 }
 
 fun handlePath(path: String): String {
