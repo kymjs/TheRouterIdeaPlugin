@@ -5,14 +5,14 @@ plugins {
 }
 
 group = "cn.therouter"
-version = "1.2.4"
+version = "1.2.5"
 
 repositories {
     mavenCentral()
 }
 
 intellij {
-    version.set("2021.3")
+    version.set("2021.2.4")
     type.set("IC") // Target IDE Platform
 
     plugins.set(listOf(/* Plugin Dependencies */))
@@ -31,7 +31,7 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("*")
+        sinceBuild.set("2021.2.4")
         untilBuild.set("300.*")
     }
 
