@@ -19,13 +19,8 @@
                                         implementationClass="cn.therouter.idea.navigator.TheRouterLineMarker"/>
         <codeInsight.lineMarkerProvider language="JAVA"
                                         implementationClass="cn.therouter.idea.navigator.TheRouterLineMarker"/>
+        <startupActivity implementation="cn.therouter.idea.update.UpgradeComponent"/>
     </extensions>
-    <projectListeners>
-        <listener class="cn.therouter.idea.update.UpgradeComponent"
-                  topic="com.intellij.openapi.project.ProjectManagerListener">
-
-        </listener>
-    </projectListeners>
     <actions>
         <group id="TheRouter.TopMenu"
                text="TheRouter"
