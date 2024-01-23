@@ -12,10 +12,10 @@ class TheRouterLineMarker : LineMarkerProvider {
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? = null
 
     override fun collectSlowLineMarkers(
-        elements: MutableList<out PsiElement>,
-        result: MutableCollection<in LineMarkerInfo<*>>
+            elements: MutableList<out PsiElement>,
+            result: MutableCollection<in LineMarkerInfo<*>>
     ) {
-        if (elements.isNullOrEmpty()) {
+        if (elements.isEmpty()) {
             return
         }
 

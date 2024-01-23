@@ -39,10 +39,10 @@ fun matchActionInterceptor(srcStr: String): String {
 
 fun getIcon(type: Int): Icon {
     return when (type) {
-        TYPE_ROUTE_ANNOTATION -> IconLoader.getIcon("/icon/icon_from.png")
-        TYPE_THEROUTER_BUILD -> IconLoader.getIcon("/icon/icon_to.png")
-        TYPE_ACTION_INTERCEPT -> IconLoader.getIcon("/icon/icon_from.png")
-        else -> IconLoader.getIcon("/icon/icon_warn.png")
+        TYPE_ROUTE_ANNOTATION -> IconLoader.getIcon("/icon/icon_from.png", IconLoader::class.java)
+        TYPE_THEROUTER_BUILD -> IconLoader.getIcon("/icon/icon_to.png", IconLoader::class.java)
+        TYPE_ACTION_INTERCEPT -> IconLoader.getIcon("/icon/icon_from.png", IconLoader::class.java)
+        else -> IconLoader.getIcon("/icon/icon_warn.png", IconLoader::class.java)
     }
 }
 
