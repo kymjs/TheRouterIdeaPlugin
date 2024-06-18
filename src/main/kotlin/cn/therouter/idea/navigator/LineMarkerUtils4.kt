@@ -10,7 +10,7 @@ import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 
-class LineMarkerUtils4 {
+class LineMarkerUtils4 : LineMarkerFunction {
     private var allFile = ArrayList<VirtualFile>()
 
     private var allTheRouterPsi = HashMap<VirtualFile, HashSet<CodeWrapper>>()
@@ -18,7 +18,7 @@ class LineMarkerUtils4 {
     // filePath, allLineMarkerCode
     private var allFileLineMarker = HashMap<String, HashSet<CodeWrapper>>()
 
-    fun main(elements: MutableList<out PsiElement>): ArrayList<LineMarkerInfo<*>> {
+    override fun main(elements: MutableList<out PsiElement>): ArrayList<LineMarkerInfo<*>> {
         findAllTheRouterPsi(elements[0])
         createIndex(elements)
         return createLineMark(elements[0].containingFile.viewProvider.virtualFile)

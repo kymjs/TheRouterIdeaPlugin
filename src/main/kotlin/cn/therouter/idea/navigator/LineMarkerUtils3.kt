@@ -12,7 +12,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import java.util.concurrent.CopyOnWriteArrayList
 
-class LineMarkerUtils3 {
+class LineMarkerUtils3 : LineMarkerFunction {
 
     // 行标记跳转的目标代码
     private val allTargetPsi = HashMap<String, HashSet<TargetPsiElement>>()
@@ -20,7 +20,7 @@ class LineMarkerUtils3 {
     // 需要加行标记的代码
     private val allMarkerPsi = HashMap<String, CodeWrapper>()
 
-    fun main(elements: MutableList<out PsiElement>): ArrayList<LineMarkerInfo<*>> {
+    override fun main(elements: MutableList<out PsiElement>): ArrayList<LineMarkerInfo<*>> {
         return create(elements)
     }
 
