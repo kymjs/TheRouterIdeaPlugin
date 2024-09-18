@@ -19,45 +19,44 @@
                                         implementationClass="cn.therouter.idea.navigator.TheRouterLineMarker"/>
         <codeInsight.lineMarkerProvider language="JAVA"
                                         implementationClass="cn.therouter.idea.navigator.TheRouterLineMarker"/>
-        <startupActivity implementation="cn.therouter.idea.update.UpgradeComponent"/>
     </extensions>
+    <applicationListeners>
+        <listener class="cn.therouter.idea.update.UpgradeComponent"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </applicationListeners>
+
     <actions>
-        <group id="TheRouter.TopMenu"
-               text="TheRouter"
-               description="TheRouter 开发插件">
-            <action class="cn.therouter.idea.transfer.TransferAction"
-                    id="Transfer"
-                    text="从 ARouter 迁移至 TheRouter"
-                    description="Transfer to theRouter">
-                <keyboard-shortcut first-keystroke="control shift 1" keymap="$default"/>
-                <add-to-group group-id="TheRouter.TopMenu" anchor="last"/>
-            </action>
+        <action class="cn.therouter.idea.transfer.TransferAction"
+                id="Transfer"
+                text="TheRouter·一键迁移工具"
+                description="Transfer to theRouter">
+            <keyboard-shortcut first-keystroke="control shift 1" keymap="$default"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
 
-            <action class="cn.therouter.idea.about.VersionAction"
-                    id="Version"
-                    text="获取 TheRouter 最新版本号"
-                    description="Upgrade therouter version">
-                <keyboard-shortcut first-keystroke="control shift 2" keymap="$default"/>
-                <add-to-group group-id="TheRouter.TopMenu" anchor="last"/>
-            </action>
+        <action class="cn.therouter.idea.about.VersionAction"
+                id="Version"
+                text="TheRouter·检查最新依赖"
+                description="Upgrade therouter version">
+            <keyboard-shortcut first-keystroke="control shift 2" keymap="$default"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
 
-            <action class="cn.therouter.idea.about.GitHubFeedbackAction"
-                    id="GitHub"
-                    text="反馈 GitHub Issue"
-                    description="FeedBack github">
-                <keyboard-shortcut first-keystroke="control shift 9" keymap="$default"/>
-                <add-to-group group-id="TheRouter.TopMenu" anchor="last"/>
-            </action>
+        <action class="cn.therouter.idea.about.GitHubFeedbackAction"
+                id="GitHub"
+                text="TheRouter·反馈 Issue"
+                description="FeedBack github">
+            <keyboard-shortcut first-keystroke="control shift 9" keymap="$default"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
 
-            <action class="cn.therouter.idea.about.WXFeedbackAction"
-                    id="WeChat"
-                    text="加入官方微信群"
-                    description="FeedBack wechat">
-                <keyboard-shortcut first-keystroke="control shift 0" keymap="$default"/>
-                <add-to-group group-id="TheRouter.TopMenu" anchor="last"/>
-            </action>
+        <action class="cn.therouter.idea.about.WXFeedbackAction"
+                id="WeChat"
+                text="TheRouter·官方微信"
+                description="FeedBack wechat">
+            <keyboard-shortcut first-keystroke="control shift 0" keymap="$default"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
 
-            <add-to-group group-id="MainMenu" anchor="last"/>
-        </group>
     </actions>
 </idea-plugin>

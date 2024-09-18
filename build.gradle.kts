@@ -1,13 +1,14 @@
 plugins {
     id("java")
-    id("org.jetbrains.kotlin.jvm") version "1.6.20"
-    id("org.jetbrains.intellij") version "1.6.0"
+    id("org.jetbrains.kotlin.jvm") version "1.9.21"
+    id("org.jetbrains.intellij") version "1.15.0"
 }
 
 group = "cn.therouter"
-version = "1.2.7"
+version = "1.2.8"
 
 repositories {
+//    maven("https://nas.therouter.cn:8443/repository/maven-public/")
     mavenCentral()
 }
 
