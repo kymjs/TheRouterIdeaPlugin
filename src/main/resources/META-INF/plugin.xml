@@ -12,6 +12,7 @@
     <img src="https://plugins.jetbrains.com/files/20047/screenshot_f637ffd6-bbaa-432a-ba24-1ed84bad5b15">]]></description>
 
     <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">

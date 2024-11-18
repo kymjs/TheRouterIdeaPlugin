@@ -8,15 +8,14 @@ group = "cn.therouter"
 version = "1.2.8"
 
 repositories {
-//    maven("https://nas.therouter.cn:8443/repository/maven-public/")
+    maven("https://nas.therouter.cn:8443/repository/maven-public/")
     mavenCentral()
 }
 
 intellij {
     version.set("2021.2.4")
     type.set("IC") // Target IDE Platform
-
-    plugins.set(listOf(/* Plugin Dependencies */))
+    plugins.set(listOf("java"))
 }
 dependencies {
     implementation("com.squareup.okhttp3:okhttp:3.14.2")
