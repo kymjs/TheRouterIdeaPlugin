@@ -11,10 +11,10 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 
 class LineMarkerUtils2 : LineMarkerFunction {
-    private var allFile = HashSet<VirtualFile>()
+    private val allFile = HashSet<VirtualFile>() // allFile的size会一直增加
 
     // filePath, allLineMarkerCode
-    private var allFileLineMarker = HashMap<String, HashSet<CodeWrapper>>()
+    private val allFileLineMarker = HashMap<String, HashSet<CodeWrapper>>()
 
     override fun main(elements: MutableList<out PsiElement>): ArrayList<LineMarkerInfo<*>> {
         createIndex(elements)
@@ -100,8 +100,8 @@ class LineMarkerUtils2 : LineMarkerFunction {
     private fun createLineMark(wrapper: CodeWrapper, set: HashSet<TargetPsiElement>): LineMarkerInfo<*>? = try {
         if (set.isNotEmpty()) {
             val builder = NavigationGutterIconBuilder.create(getIcon(wrapper.type))
-            builder.setAlignment(GutterIconRenderer.Alignment.CENTER)
-            builder.setTargets(set)
+                .setAlignment(GutterIconRenderer.Alignment.CENTER)
+                .setTargets(set)
             if (wrapper.type == TYPE_ROUTE_ANNOTATION || wrapper.type == TYPE_ACTION_INTERCEPT) {
                 builder.setTooltipTitle("TheRouter:跳转到使用处")
             } else {
@@ -110,7 +110,8 @@ class LineMarkerUtils2 : LineMarkerFunction {
             builder.createLineMarkerInfo(wrapper.psiElement)
         } else {
             val builder = NavigationGutterIconBuilder.create(getIcon(TYPE_NONE))
-            builder.setAlignment(GutterIconRenderer.Alignment.CENTER)
+                .setAlignment(GutterIconRenderer.Alignment.CENTER)
+                .setTargets(set)
             if (wrapper.type == TYPE_ROUTE_ANNOTATION || wrapper.type == TYPE_ACTION_INTERCEPT) {
                 builder.setTooltipTitle("未发现使用:TheRouter.build(${wrapper.code})")
             } else {

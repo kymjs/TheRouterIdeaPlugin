@@ -1,13 +1,18 @@
 package cn.therouter.idea.navigator
 
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiInvalidElementAccessException
 
 open class TargetPsiElement(private val delegate: PsiElement) : PsiElement by delegate {
 
     fun getKey() = delegate.getKey()
 
     override fun getText(): String {
-        val prefix = delegate.containingFile.name
+        val prefix:String = try {
+            delegate.containingFile.name
+        } catch (_:PsiInvalidElementAccessException) {
+            ""
+        }
         val text = delegate.getKey()
         val suffix = if (text.length > 80) {
             "${text.subSequence(0, 80)}..."

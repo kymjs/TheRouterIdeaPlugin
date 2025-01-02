@@ -1,6 +1,6 @@
 package cn.therouter.idea.navigator
 
-import com.intellij.openapi.util.IconLoader
+import cn.therouter.idea.utils.RouteIcons
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -39,10 +39,10 @@ fun matchActionInterceptor(srcStr: String): String {
 
 fun getIcon(type: Int): Icon {
     return when (type) {
-        TYPE_ROUTE_ANNOTATION -> IconLoader.getIcon("/icon/icon_from.png", IconLoader::class.java)
-        TYPE_THEROUTER_BUILD -> IconLoader.getIcon("/icon/icon_to.png", IconLoader::class.java)
-        TYPE_ACTION_INTERCEPT -> IconLoader.getIcon("/icon/icon_from.png", IconLoader::class.java)
-        else -> IconLoader.getIcon("/icon/icon_warn.png", IconLoader::class.java)
+        TYPE_ROUTE_ANNOTATION -> RouteIcons.icon_from
+        TYPE_THEROUTER_BUILD -> RouteIcons.icon_to
+        TYPE_ACTION_INTERCEPT -> RouteIcons.icon_from
+        else -> RouteIcons.icon_warn
     }
 }
 

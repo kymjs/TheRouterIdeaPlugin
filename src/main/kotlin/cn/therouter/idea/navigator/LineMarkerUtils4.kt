@@ -11,12 +11,12 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 
 class LineMarkerUtils4 : LineMarkerFunction {
-    private var allFile = ArrayList<VirtualFile>()
+    private val allFile = ArrayList<VirtualFile>()
 
-    private var allTheRouterPsi = HashMap<VirtualFile, HashSet<CodeWrapper>>()
+    private val allTheRouterPsi = HashMap<VirtualFile, HashSet<CodeWrapper>>()
 
     // filePath, allLineMarkerCode
-    private var allFileLineMarker = HashMap<String, HashSet<CodeWrapper>>()
+    private val allFileLineMarker = HashMap<String, HashSet<CodeWrapper>>()
 
     override fun main(elements: MutableList<out PsiElement>): ArrayList<LineMarkerInfo<*>> {
         findAllTheRouterPsi(elements[0])
@@ -51,6 +51,7 @@ class LineMarkerUtils4 : LineMarkerFunction {
 
 
     private fun findAllTheRouterPsi(rootElement: PsiElement) {
+        allFile.clear()
         val scopes = GlobalSearchScope.projectScope(rootElement.project)
         val kotlinFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "kt", scopes)
         val javaFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "java", scopes)
@@ -129,8 +130,8 @@ class LineMarkerUtils4 : LineMarkerFunction {
             try {
                 if (targetSet.isNotEmpty()) {
                     val builder = NavigationGutterIconBuilder.create(getIcon(lineMarkerCode.type))
-                    builder.setAlignment(GutterIconRenderer.Alignment.CENTER)
-                    builder.setTargets(targetSet)
+                        .setAlignment(GutterIconRenderer.Alignment.CENTER)
+                        .setTargets(targetSet)
                     if (lineMarkerCode.type == TYPE_ROUTE_ANNOTATION || lineMarkerCode.type == TYPE_ACTION_INTERCEPT) {
                         builder.setTooltipTitle("TheRouter:跳转到使用处")
                     } else {
@@ -139,7 +140,8 @@ class LineMarkerUtils4 : LineMarkerFunction {
                     result.add(builder.createLineMarkerInfo(lineMarkerCode.psiElement))
                 } else {
                     val builder = NavigationGutterIconBuilder.create(getIcon(TYPE_NONE))
-                    builder.setAlignment(GutterIconRenderer.Alignment.CENTER)
+                        .setAlignment(GutterIconRenderer.Alignment.CENTER)
+                        .setTargets(targetSet)
                     if (lineMarkerCode.type == TYPE_ROUTE_ANNOTATION || lineMarkerCode.type == TYPE_ACTION_INTERCEPT) {
                         builder.setTooltipTitle("未发现使用:TheRouter.build(${lineMarkerCode.code})")
                     } else {

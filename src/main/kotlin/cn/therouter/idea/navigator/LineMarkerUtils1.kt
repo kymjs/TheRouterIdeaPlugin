@@ -14,7 +14,7 @@ import com.intellij.psi.util.PsiTreeUtil
 class LineMarkerUtils1 : LineMarkerFunction {
 
     // VirtualFilePath, All LineMarker Code
-    private var allTheRouterPsi = HashMap<String, HashSet<CodeWrapper>>()
+    private val allTheRouterPsi = HashMap<String, HashSet<CodeWrapper>>()
 
     // psiElement.hashCode(), LineMarker Info
     private val markerCache = HashMap<CodeWrapper, LineMarkerInfo<*>>()
@@ -103,8 +103,8 @@ class LineMarkerUtils1 : LineMarkerFunction {
                 try {
                     if (targetSet.isNotEmpty()) {
                         val builder = NavigationGutterIconBuilder.create(getIcon(lineMarkerCode.type))
-                        builder.setAlignment(GutterIconRenderer.Alignment.CENTER)
-                        builder.setTargets(targetSet)
+                            .setAlignment(GutterIconRenderer.Alignment.CENTER)
+                            .setTargets(targetSet)
                         if (lineMarkerCode.type == TYPE_ROUTE_ANNOTATION || lineMarkerCode.type == TYPE_ACTION_INTERCEPT) {
                             builder.setTooltipTitle("TheRouter:跳转到使用处")
                         } else {
@@ -115,7 +115,8 @@ class LineMarkerUtils1 : LineMarkerFunction {
                         result.add(marker)
                     } else {
                         val builder = NavigationGutterIconBuilder.create(getIcon(TYPE_NONE))
-                        builder.setAlignment(GutterIconRenderer.Alignment.CENTER)
+                            .setAlignment(GutterIconRenderer.Alignment.CENTER)
+                            .setTargets(targetSet)
                         if (lineMarkerCode.type == TYPE_ROUTE_ANNOTATION || lineMarkerCode.type == TYPE_ACTION_INTERCEPT) {
                             builder.setTooltipTitle("未发现使用:TheRouter.build(${lineMarkerCode.code})")
                         } else {

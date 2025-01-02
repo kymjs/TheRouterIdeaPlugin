@@ -3,6 +3,7 @@ package cn.therouter.idea.navigator
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
 import com.intellij.openapi.editor.markup.GutterIconRenderer
+import com.intellij.openapi.progress.util.BackgroundTaskUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
@@ -12,7 +13,10 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import java.util.concurrent.CopyOnWriteArrayList
 
-class LineMarkerUtils3 : LineMarkerFunction {
+/**
+ * mainly copy from LineMarkerUtils3
+ */
+class LineMarkerUtils5 : LineMarkerFunction {
 
     // 行标记跳转的目标代码
     private val allTargetPsi = HashMap<String, HashSet<TargetPsiElement>>()
@@ -24,9 +28,18 @@ class LineMarkerUtils3 : LineMarkerFunction {
         return create(elements)
     }
 
-    fun create(elements: MutableList<out PsiElement>): ArrayList<LineMarkerInfo<*>> {
+    private fun create(elements: MutableList<out PsiElement>): ArrayList<LineMarkerInfo<*>> {
         val result = ArrayList<LineMarkerInfo<*>>()
         val filePath = elements[0].containingFile.viewProvider.virtualFile.canonicalPath
+        val proj = elements[0].project
+        val scope = GlobalSearchScope.projectScope(proj)
+        if (allCodeFiles.isEmpty() || MyVFSListener.isChanged.also { MyVFSListener.isChanged = false }) {
+            if (allCodeFiles.isNotEmpty()) {
+                allCodeFiles.clear()
+            }
+            allCodeFiles.addAll(FilenameIndex.getAllFilesByExt(proj, "kt", scope))
+            allCodeFiles.addAll(FilenameIndex.getAllFilesByExt(proj, "java", scope))
+        }
         elements.forEach { psiElement ->
             try {
                 findCode(psiElement)?.let { targetContent ->
@@ -34,7 +47,7 @@ class LineMarkerUtils3 : LineMarkerFunction {
                         val key = getKey(filePath, psiElement)
                         allMarkerPsi[key] = targetContent
                         val targetPsiSet = allTargetPsi[key] ?: HashSet()
-                        val list = findAllTargetPsi(elements[0].project, filePath, targetContent)
+                        val list = findAllTargetPsi(proj, filePath, targetContent)
                         list.forEach { newFind ->
                             var exists = false
                             targetPsiSet.forEach { target ->
@@ -63,9 +76,9 @@ class LineMarkerUtils3 : LineMarkerFunction {
                         .setAlignment(GutterIconRenderer.Alignment.CENTER)
                         .setTargets(all)
                     if (targetContent.type == TYPE_ROUTE_ANNOTATION || targetContent.type == TYPE_ACTION_INTERCEPT) {
-                        builder.setTooltipTitle("TheRouter:跳转到使用处")
+                        builder.setTooltipTitle("跳转到使用处")
                     } else {
-                        builder.setTooltipTitle("TheRouter:跳转到声明处")
+                        builder.setTooltipTitle("跳转到声明处")
                     }
                     result.add(builder.createLineMarkerInfo(targetContent.psiElement))
                 } else {
@@ -107,7 +120,7 @@ class LineMarkerUtils3 : LineMarkerFunction {
         return target
     }
 
-    private val allCodeFiles = CopyOnWriteArrayList<VirtualFile>()
+    private val allCodeFiles = ArrayList<VirtualFile>()
 
     /**
      * 查找入参 targetContent，能跳转到的目标代码
@@ -118,29 +131,12 @@ class LineMarkerUtils3 : LineMarkerFunction {
         content: CodeWrapper
     ): Collection<TargetPsiElement> {
         val result = HashSet<TargetPsiElement>()
-        if (allCodeFiles.isEmpty()) {
-            val scopes = GlobalSearchScope.projectScope(project)
-            val kotlinFiles = FilenameIndex.getAllFilesByExt(project, "kt", scopes)
-            val javaFiles = FilenameIndex.getAllFilesByExt(project, "java", scopes)
-            allCodeFiles.addAll(kotlinFiles)
-            allCodeFiles.addAll(javaFiles)
-        } else {
-            Thread {
-                val scopes = GlobalSearchScope.projectScope(project)
-                val kotlinFiles = FilenameIndex.getAllFilesByExt(project, "kt", scopes)
-                val javaFiles = FilenameIndex.getAllFilesByExt(project, "java", scopes)
-                synchronized(allCodeFiles) {
-                    allCodeFiles.clear()
-                    allCodeFiles.addAll(kotlinFiles)
-                    allCodeFiles.addAll(javaFiles)
-                }
-            }.start()
-        }
+        val psiManager = PsiManager.getInstance(project)
         for (virtualFile in allCodeFiles) {
             if (virtualFile.canonicalPath == filePath) {
                 continue
             }
-            val file = PsiManager.getInstance(project).findFile(virtualFile)
+            val file = psiManager.findFile(virtualFile)
             file?.let { psiFile ->
                 val properties = PsiTreeUtil.findChildrenOfType(psiFile, PsiElement::class.java)
                 properties.forEach { psiElement ->
