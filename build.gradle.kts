@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "cn.therouter"
-version = "1.2.9"
+version = "1.3.0"
 
 repositories {
     maven("https://maven.therouter.cn:8443/repository/maven-public/")
@@ -13,7 +13,7 @@ repositories {
 }
 
 intellij {
-    version.set("2021.2.4")
+    version.set("2024.1.4")
     type.set("IC") // Target IDE Platform
     plugins.set(listOf("java"))
 }
@@ -31,8 +31,8 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("211.*")
-        untilBuild.set("244.*")
+        sinceBuild.set("231.*")
+        untilBuild.set("264.*")
     }
 
     signPlugin {
