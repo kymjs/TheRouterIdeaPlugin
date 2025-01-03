@@ -20,7 +20,7 @@ fun gotoUrl(url: String) {
 
 fun getVersion(currentVersion: String = ""): VersionBean {
     val json = try {
-        doGet("https://oss.kymjs.com/therouter/upgrade.json?currentVersion=$currentVersion")
+        doGet("https://cdn.kymjs.com:8843/therouter/upgrade.json?currentVersion=$currentVersion")
     } catch (e: Exception) {
         "{\n" +
                 "    \"toolVersionName\": \"$PLUGIN_VERSION_NAME\",\n" +
