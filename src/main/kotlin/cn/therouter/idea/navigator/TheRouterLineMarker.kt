@@ -17,7 +17,7 @@ class TheRouterLineMarker : LineMarkerProvider {
 
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? = null
 
-    var function: LineMarkerFunction? = null
+    private var function: LineMarkerFunction? = null
     override fun collectSlowLineMarkers(
         elements: MutableList<out PsiElement>,
         result: MutableCollection<in LineMarkerInfo<*>>

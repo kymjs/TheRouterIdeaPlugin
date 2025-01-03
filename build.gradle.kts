@@ -8,19 +8,13 @@ group = "cn.therouter"
 version = "1.2.9"
 
 repositories {
-    maven("https://nas.therouter.cn:8443/repository/maven-public/")
+    maven("https://maven.therouter.cn:8443/repository/maven-public/")
     mavenCentral()
 }
 
 intellij {
-    if (false) {
-        // 本地调试
-        //localPath.set("D:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2024.3.1.1")
-        localPath.set("C:\\Program Files\\Android\\Android Studio")
-    } else {
-        version.set("2021.2.4")
-        type.set("IC") // Target IDE Platform
-    }
+    version.set("2021.2.4")
+    type.set("IC") // Target IDE Platform
     plugins.set(listOf("java"))
 }
 dependencies {

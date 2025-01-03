@@ -9,6 +9,7 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
+import com.jetbrains.rd.util.getThrowableText
 
 class LineMarkerUtils4 : LineMarkerFunction {
     private val allFile = ArrayList<VirtualFile>()
@@ -93,7 +94,7 @@ class LineMarkerUtils4 : LineMarkerFunction {
         }
     }
 
-    fun createLineMark(virtualFile: VirtualFile): ArrayList<LineMarkerInfo<*>> {
+    private fun createLineMark(virtualFile: VirtualFile): ArrayList<LineMarkerInfo<*>> {
         val result = ArrayList<LineMarkerInfo<*>>()
         allFileLineMarker[virtualFile.canonicalPath]?.forEach { lineMarkerCode ->
             val targetSet = HashSet<PsiElement>()
@@ -125,7 +126,8 @@ class LineMarkerUtils4 : LineMarkerFunction {
                         }
                     }
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                debug("Exception", "1" + e.getThrowableText())
             }
             try {
                 if (targetSet.isNotEmpty()) {
@@ -158,7 +160,8 @@ class LineMarkerUtils4 : LineMarkerFunction {
                     }
                     result.add(builder.createLineMarkerInfo(lineMarkerCode.psiElement))
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                debug("Exception", "2" + e.getThrowableText())
             }
         }
         return result

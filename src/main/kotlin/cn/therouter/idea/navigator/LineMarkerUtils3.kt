@@ -24,7 +24,7 @@ class LineMarkerUtils3 : LineMarkerFunction {
         return create(elements)
     }
 
-    fun create(elements: MutableList<out PsiElement>): ArrayList<LineMarkerInfo<*>> {
+    private fun create(elements: MutableList<out PsiElement>): ArrayList<LineMarkerInfo<*>> {
         val result = ArrayList<LineMarkerInfo<*>>()
         val filePath = elements[0].containingFile.viewProvider.virtualFile.canonicalPath
         elements.forEach { psiElement ->
