@@ -11,6 +11,9 @@ import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 
+/**
+ * 内存占用最低，每次都遍历文件psi
+ */
 class LineMarkerUtils1 : LineMarkerFunction {
 
     // VirtualFilePath, All LineMarker Code
