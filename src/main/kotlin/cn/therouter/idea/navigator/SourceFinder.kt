@@ -15,9 +15,10 @@ fun getRouteAnnotationCode(psiElement: PsiElement): CodeWrapper? {
         val allParams = content.split(",")
 
         var path = ""
-        allParams.forEach {
-            if (it.startsWith("path=")) {
-                path = it.substring("path=".length)
+        for (param in allParams) {
+            if (param.startsWith("path=")) {
+                path = param.substring("path=".length)
+                break
             }
         }
         if (path.isNotBlank()) {

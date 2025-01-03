@@ -20,10 +20,13 @@
                                         implementationClass="cn.therouter.idea.navigator.TheRouterLineMarker"/>
         <codeInsight.lineMarkerProvider language="JAVA"
                                         implementationClass="cn.therouter.idea.navigator.TheRouterLineMarker"/>
+        <notificationGroup id="router" displayType="BALLOON" />
     </extensions>
     <applicationListeners>
         <listener class="cn.therouter.idea.update.UpgradeComponent"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
+        <listener class="cn.therouter.idea.navigator.MyVFSListener"
+                  topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
     </applicationListeners>
 
     <actions>
