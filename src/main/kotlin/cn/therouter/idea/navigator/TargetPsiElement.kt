@@ -53,18 +53,16 @@ open class TargetPsiElement(private val delegate: PsiElement) : Comparable<Targe
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as TargetPsiElement
-
-        if (text != other.text) return false
-
+        if (other !is PsiElement) return false
+        if (getFileName() != other.getFileName()) return false
+        if (getLineNumber() != other.getLineNumber()) return false
         return true
     }
 
     override fun hashCode(): Int {
-        val result = text.hashCode()
-        return 31 * result
+        var result = 31 * delegate.getFileName().hashCode()
+        result = 31 * result + delegate.getLineNumber().hashCode()
+        return result
     }
 }
 

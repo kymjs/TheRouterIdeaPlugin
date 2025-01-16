@@ -13,22 +13,6 @@ class CodeWrapper(
     var code: String = "",
     var psiElement: PsiElement
 ) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-        other as CodeWrapper
-        if (type != other.type) return false
-        if (getKey(code) != getKey(other.code)) return false
-        if (psiElement.getKey() != other.psiElement.getKey()) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = type + psiElement.getKey().hashCode() + code.hashCode()
-        result *= 31
-        return result
-    }
 
     private fun getKey(text: String): String {
         return text.replace(" ", "").replace("\n", "")
@@ -39,6 +23,25 @@ class CodeWrapper(
         TYPE_THEROUTER_BUILD -> "TYPE_THEROUTER_BUILD"
         TYPE_ACTION_INTERCEPT -> "TYPE_ACTION_INTERCEPT"
         else -> "TYPE_NONE"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is CodeWrapper) return false
+        if (type != other.type) return false
+        if (getKey(code) != getKey(other.code)) return false
+        if (psiElement.getFileName() != other.psiElement.getFileName()) return false
+        if (psiElement.getLineNumber() != other.psiElement.getLineNumber()) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = type
+        result = 31 * result + getKey(code).hashCode()
+        result = 31 * result + psiElement.getFileName().hashCode()
+        result = 31 * result + psiElement.getLineNumber().hashCode()
+        return result
     }
 
     override fun toString(): String {

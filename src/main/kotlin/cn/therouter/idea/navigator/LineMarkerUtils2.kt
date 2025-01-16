@@ -12,7 +12,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 
 /**
- * 内存占用最低，每1s返回一次结果
+ * 内存占用最低，只首次扫描工程，每5s返回一次结果
  */
 class LineMarkerUtils2 : LineMarkerFunction {
 
@@ -20,18 +20,24 @@ class LineMarkerUtils2 : LineMarkerFunction {
     private val allTheRouterPsi = HashMap<String, HashSet<CodeWrapper>>()
     private val timeMap = HashMap<String, Long>()
 
+    private var findAllFinish = false
+
     override fun main(elements: MutableList<out PsiElement>): Collection<LineMarkerInfo<*>> {
         val currentFile = elements[0].containingFile.viewProvider.virtualFile
         val currentPath = currentFile.canonicalPath ?: ""
         if (currentPath.isEmpty()) {
             return ArrayList()
         }
-        // 1s内只计算一次
-        if (System.currentTimeMillis() - (timeMap[currentPath] ?: 0L) < 1000L) {
+        // 5s内只计算一次
+        if (System.currentTimeMillis() - (timeMap[currentPath] ?: 0L) < 5000L) {
             return ArrayList()
         }
 
-        findAllTheRouterPsi(elements[0])
+        if (!findAllFinish) {
+            findAllTheRouterPsi(elements[0])
+        } else {
+            updateTheRouterPsi(elements[0].project, currentFile)
+        }
 
         val result = createLineMark(currentPath)
         timeMap[currentPath] = System.currentTimeMillis()
@@ -45,15 +51,13 @@ class LineMarkerUtils2 : LineMarkerFunction {
         val allFile = ArrayList<VirtualFile>()
         allFile.addAll(kotlinFiles)
         allFile.addAll(javaFiles)
-
-        val currentFile = rootElement.containingFile.viewProvider.virtualFile
         allFile.forEach { virtualFile ->
-            // 如果是当前打开的文件，就更新缓存
-            // 或者如果当前遍历的文件没有缓存标记，就添加缓存
-            if (virtualFile.canonicalPath == currentFile.canonicalPath || allTheRouterPsi[virtualFile.canonicalPath] == null) {
+            // 如果当前遍历的文件没有缓存标记，就添加缓存
+            if (allTheRouterPsi[virtualFile.canonicalPath] == null) {
                 updateTheRouterPsi(rootElement.project, virtualFile)
             }
         }
+        findAllFinish = true
     }
 
     /**
@@ -62,8 +66,7 @@ class LineMarkerUtils2 : LineMarkerFunction {
     private fun updateTheRouterPsi(project: Project, virtualFile: VirtualFile) {
         val virtualFilePath = virtualFile.canonicalPath ?: ""
         PsiManager.getInstance(project).findFile(virtualFile)?.let { psiFile ->
-            allTheRouterPsi.remove(virtualFilePath)
-            val codeWrapperSet = HashSet<CodeWrapper>()
+            val codeWrapperSet = allTheRouterPsi.remove(virtualFilePath) ?: HashSet()
             val psiCollection = PsiTreeUtil.findChildrenOfType(psiFile, PsiElement::class.java)
             psiCollection.forEach {
                 val c = getRouteAnnotationCode(it) ?: getTheRouterBuildCode(it) ?: getActionInterceptorCode(it)
@@ -78,32 +81,42 @@ class LineMarkerUtils2 : LineMarkerFunction {
     private fun createLineMark(virtualFilePath: String): Collection<LineMarkerInfo<*>> {
         val result = HashSet<LineMarkerInfo<*>>()
         allTheRouterPsi[virtualFilePath]?.forEach { codeWrapper ->
-            val targetSet = HashSet<TargetPsiElement>()
+            val targetList = ArrayList<TargetPsiElement>()
             try {
                 when (codeWrapper.type) {
                     TYPE_ROUTE_ANNOTATION -> {
                         getAllTheRouterBuildTargetPsi(codeWrapper.code).forEach { targetPsi ->
-                            targetSet.add(targetPsi)
+                            targetList.add(targetPsi)
                         }
                     }
 
                     TYPE_THEROUTER_BUILD -> {
                         getAllRouteAnnotationOrActionInterceptTargetPsi(codeWrapper.code).forEach { targetPsi ->
-                            targetSet.add(targetPsi)
+                            targetList.add(targetPsi)
                         }
                     }
 
                     TYPE_ACTION_INTERCEPT -> {
                         getAllTheRouterBuildTargetPsi(codeWrapper.code).forEach { targetPsi ->
-                            targetSet.add(targetPsi)
+                            targetList.add(targetPsi)
                         }
                     }
                 }
             } catch (_: Exception) {
             }
             try {
-                if (targetSet.isNotEmpty()) {
-                    val targetList = ArrayList(targetSet)
+                // 排序后去重，只保留代码部分最长的psi
+                targetList.sort()
+                val newList = ArrayList<TargetPsiElement>()
+                targetList.forEach {
+                    if (!newList.contains(it)) {
+                        newList.add(it)
+                    }
+                }
+                targetList.clear()
+                targetList.addAll(newList)
+
+                if (targetList.isNotEmpty()) {
                     targetList.sort()
                     val builder = NavigationGutterIconBuilder.create(getIcon(codeWrapper.type))
                         .setAlignment(GutterIconRenderer.Alignment.CENTER)
@@ -118,7 +131,7 @@ class LineMarkerUtils2 : LineMarkerFunction {
                 } else {
                     val builder = NavigationGutterIconBuilder.create(getIcon(TYPE_NONE))
                         .setAlignment(GutterIconRenderer.Alignment.CENTER)
-                        .setTargets(targetSet)
+                        .setTargets(targetList)
                     if (codeWrapper.type == TYPE_ROUTE_ANNOTATION || codeWrapper.type == TYPE_ACTION_INTERCEPT) {
                         builder.setTooltipTitle("未发现使用:TheRouter.build(${codeWrapper.code})")
                     } else {
