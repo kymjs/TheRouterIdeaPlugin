@@ -54,7 +54,7 @@ open class TargetPsiElement(private val delegate: PsiElement) : PsiElement by de
         return 31 * result
     }
 
-    fun getElementLineNumbers(psiElement: PsiElement): Int {
+    private fun getElementLineNumbers(psiElement: PsiElement): Int {
         val project: Project = psiElement.project
         val document: Document? = PsiDocumentManager.getInstance(project).getDocument(psiElement.containingFile)
         if (document != null) {
