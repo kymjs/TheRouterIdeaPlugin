@@ -10,18 +10,15 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
-import com.jetbrains.rd.generator.nova.PredefinedType
 
 /**
- * 内存占用最低，只打开当前文件时更新缓存，每1s返回一次结果
+ * 内存占用最低，每1s返回一次结果
  */
 class LineMarkerUtils2 : LineMarkerFunction {
 
     // VirtualFilePath, All LineMarker Code
     private val allTheRouterPsi = HashMap<String, HashSet<CodeWrapper>>()
     private val timeMap = HashMap<String, Long>()
-
-    private var findAllFinish = false
 
     override fun main(elements: MutableList<out PsiElement>): Collection<LineMarkerInfo<*>> {
         val currentFile = elements[0].containingFile.viewProvider.virtualFile
@@ -34,11 +31,7 @@ class LineMarkerUtils2 : LineMarkerFunction {
             return ArrayList()
         }
 
-        if (!findAllFinish) {
-            findAllTheRouterPsi(elements[0])
-        } else {
-            updateTheRouterPsi(elements[0].project, currentFile)
-        }
+        findAllTheRouterPsi(elements[0])
 
         val result = createLineMark(currentPath)
         timeMap[currentPath] = System.currentTimeMillis()
@@ -61,7 +54,6 @@ class LineMarkerUtils2 : LineMarkerFunction {
                 updateTheRouterPsi(rootElement.project, virtualFile)
             }
         }
-        findAllFinish = true
     }
 
     /**
@@ -111,9 +103,11 @@ class LineMarkerUtils2 : LineMarkerFunction {
             }
             try {
                 if (targetSet.isNotEmpty()) {
+                    val targetList = ArrayList(targetSet)
+                    targetList.sort()
                     val builder = NavigationGutterIconBuilder.create(getIcon(codeWrapper.type))
                         .setAlignment(GutterIconRenderer.Alignment.CENTER)
-                        .setTargets(targetSet)
+                        .setTargets(targetList)
                     if (codeWrapper.type == TYPE_ROUTE_ANNOTATION || codeWrapper.type == TYPE_ACTION_INTERCEPT) {
                         builder.setTooltipTitle("TheRouter:跳转到使用处")
                     } else {
