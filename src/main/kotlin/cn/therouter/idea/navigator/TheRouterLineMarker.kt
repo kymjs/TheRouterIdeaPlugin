@@ -8,6 +8,7 @@ import java.io.FileInputStream
 import java.util.Properties
 
 private val utils1 = LineMarkerUtils1()
+private val utils2 = LineMarkerUtils2()
 
 class TheRouterLineMarker : LineMarkerProvider {
 
@@ -31,10 +32,11 @@ class TheRouterLineMarker : LineMarkerProvider {
                 function = when (property) {
                     "off" -> null
                     "1" -> utils1
-                    else -> utils1
+                    "2" -> utils2
+                    else -> utils2
                 }
             } else {
-                function = utils1
+                function = utils2
             }
         }
 
