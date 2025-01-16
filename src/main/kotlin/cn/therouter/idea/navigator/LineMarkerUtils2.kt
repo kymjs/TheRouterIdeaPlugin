@@ -13,7 +13,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.jetbrains.rd.generator.nova.PredefinedType
 
 /**
- * 内存占用最低，每次都遍历文件psi，每1s返回一次结果
+ * 内存占用最低，只打开当前文件时更新缓存，每1s返回一次结果
  */
 class LineMarkerUtils2 : LineMarkerFunction {
 
