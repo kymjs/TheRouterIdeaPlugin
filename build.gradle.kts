@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "cn.therouter"
-version = "1.3.1"
+version = "1.3.2"
 
 repositories {
     maven("https://maven.therouter.cn:8443/repository/maven-public/")

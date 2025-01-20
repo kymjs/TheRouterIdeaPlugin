@@ -10,6 +10,7 @@ import java.util.Properties
 private val utils2 = LineMarkerUtils2()
 
 class TheRouterLineMarker : LineMarkerProvider {
+    var time: Long = 0L
 
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? = null
 
@@ -21,6 +22,10 @@ class TheRouterLineMarker : LineMarkerProvider {
         if (elements.isEmpty()) {
             return
         }
+        if (System.currentTimeMillis() - time < 500) {
+            return
+        }
+        time = System.currentTimeMillis()
 
         if (function == null) {
             val gradleProperties = File(elements[0].project.basePath, "gradle.properties")

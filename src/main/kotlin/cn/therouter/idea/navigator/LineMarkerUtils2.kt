@@ -18,7 +18,6 @@ class LineMarkerUtils2 : LineMarkerFunction {
 
     // VirtualFilePath, All LineMarker Code
     private val allTheRouterPsi = HashMap<String, HashSet<CodeWrapper>>()
-    private val timeMap = HashMap<String, Long>()
 
     private var findAllFinish = false
 
@@ -26,10 +25,6 @@ class LineMarkerUtils2 : LineMarkerFunction {
         val currentFile = elements[0].containingFile.viewProvider.virtualFile
         val currentPath = currentFile.canonicalPath ?: ""
         if (currentPath.isEmpty()) {
-            return ArrayList()
-        }
-        // 5s内只计算一次
-        if (System.currentTimeMillis() - (timeMap[currentPath] ?: 0L) < 5000L) {
             return ArrayList()
         }
 
@@ -40,7 +35,6 @@ class LineMarkerUtils2 : LineMarkerFunction {
         }
 
         val result = createLineMark(currentPath)
-        timeMap[currentPath] = System.currentTimeMillis()
         return result
     }
 
