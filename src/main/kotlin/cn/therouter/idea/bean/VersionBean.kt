@@ -6,6 +6,9 @@ class VersionBean {
     var url: String? = null
     var latestRelease: String? = null
     var latestVersion: String? = null
+    var latestHarmonyRelease: String? = null
+    var latestHarmonyVersion: String? = null
     var aarVersionArray: List<String>? = null
+    var harVersionArray: List<String>? = null
     var upgradeText: String? = null
 }

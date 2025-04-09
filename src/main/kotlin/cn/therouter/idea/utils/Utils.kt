@@ -1,9 +1,6 @@
 package cn.therouter.idea.utils
 
-import cn.therouter.idea.LATEST_LIBRARY_VERSION_NAME
-import cn.therouter.idea.PLUGIN_VERSION_CODE
-import cn.therouter.idea.PLUGIN_VERSION_NAME
-import cn.therouter.idea.RELEASE_LIBRARY_VERSION_NAME
+import cn.therouter.idea.*
 import cn.therouter.idea.bean.VersionBean
 import com.google.gson.Gson
 
@@ -27,10 +24,15 @@ fun getVersion(currentVersion: String = ""): VersionBean {
                 "    \"toolVersionCode\": $PLUGIN_VERSION_CODE,\n" +
                 "    \"latestRelease\": \"$RELEASE_LIBRARY_VERSION_NAME\",\n" +
                 "    \"latestVersion\": \"$LATEST_LIBRARY_VERSION_NAME\",\n" +
+                "    \"latestHarmonyRelease\": \"$RELEASE_HARMONY_VERSION_NAME\",\n" +
+                "    \"latestHarmonyVersion\": \"$LATEST_HARMONY_VERSION_NAME\",\n" +
                 "    \"upgradeText\": \"升级至最新版无API改动\",\n" +
                 "    \"url\": \"https://therouter.cn/docs/2022/09/05/01\",\n" +
                 "    \"aarVersionArray\": [\n" +
                 "        \"$LATEST_LIBRARY_VERSION_NAME\"\n" +
+                "    ],\n" +
+                "    \"harVersionArray\": [\n" +
+                "        \"$LATEST_HARMONY_VERSION_NAME\"\n" +
                 "    ]\n" +
                 "}"
     }

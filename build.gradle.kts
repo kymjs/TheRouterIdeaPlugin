@@ -18,6 +18,7 @@ intellij {
     plugins.set(listOf("java"))
 }
 dependencies {
+    implementation("com.github.adamko-dev:json5-kotlin:2.1.0")
     implementation("com.squareup.okhttp3:okhttp:3.14.2")
 }
 tasks {
