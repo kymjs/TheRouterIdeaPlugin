@@ -2,7 +2,6 @@ package cn.therouter.idea.transfer.hmrouter
 
 import cn.therouter.idea.transfer.ITransfer
 import java.io.File
-import java.util.regex.Pattern
 
 class HMRouterTransfer : ITransfer {
 
@@ -28,26 +27,19 @@ class HMRouterTransfer : ITransfer {
         logFile.appendText("开始生成遍历索引，请稍候...\n")
         createIndex(projectFile)
         logFile.appendText("---------------------------------------------------------\n")
-        logFile.appendText("开始修改 hvigorfile.ts ...\n")
+        logFile.appendText("开始修改 TheRouter 依赖文件 ...\n")
         handleHvigorFile()
+        handleJson5File()
         logFile.appendText("---------------------------------------------------------\n")
         logFile.appendText("开始替换 .ets 代码...\n")
         handleETSFile()
         logFile.appendText("---------------------------------------------------------\n\n")
         if (todoCustomChangeClass.isEmpty()) {
-            logFile.appendText("恭喜您，已全部转换完成。\n")
-            logFile.appendText("您还需要手动判断with()方法的使用，建议全局搜索关键字：.with(  来查看使用位置有哪些。\n")
-        } else {
-            logFile.appendText("自动转换完成，您还需要做两件事：\n")
-            logFile.appendText("1. 由于在如下类中，使用了自定义init()方法，需要手动修改对应逻辑至服务提供方初始化中。\n")
-            todoCustomChangeClass.forEach {
-                logFile.appendText("\t$it\n")
-            }
-            logFile.appendText("2. 您还需要手动判断 with()方法的使用，建议全局搜索关键字：.with(  来查看使用位置有哪些。\n")
         }
+        logFile.appendText("恭喜您，已全部转换完成。\n")
+        logFile.appendText("您还需要手动解决编译报错的部分（解决方式已经都给出在报错位置）\n")
         logFile.appendText("详细转换说明，请查阅官网文档：https://therouter.cn/docs/2022/09/05/01\n")
     }
-
 
     /**
      * 获取索引信息
@@ -73,7 +65,15 @@ class HMRouterTransfer : ITransfer {
     private fun handleHvigorFile() {
         jsFileContentMap.keys.forEach { file ->
             val text = jsFileContentMap[file]
-                ?.replace("@hadss/hmrouter-plugin", "@hll/therouter-plugin")
+                ?.replace("@hadss/hmrouter-plugin", "@hll/therouter-plugin\"这里版本号需要修改")
+                ?: ""
+            file.writeText(text)
+        }
+    }
+    private fun handleJson5File() {
+        json5FileContentMap.keys.forEach { file ->
+            val text = json5FileContentMap[file]
+                ?.replace("@hadss/hmrouter", "@hll/therouter\"这里版本号需要修改")
                 ?: ""
             file.writeText(text)
         }
@@ -157,6 +157,7 @@ class HMRouterTransfer : ITransfer {
             text = transformPushString(text)
             text = transformReplaceString(text)
                 .replace("HMNavigation", "TheRouterPage")
+                .replace("HMRouterMgr.getCurrentParam", "TheRouter.getCurrentParam")
                 .replace("HMRouterMgr.getService<", "TheRouter.get<")
                 .replace("@HMServiceProvider", "\n这个类还要手动实现 IServiceProvider 接口\n@ServiceProvider")
             file.writeText(text)
