@@ -1,5 +1,6 @@
 package cn.therouter.idea.navigator
 
+import cn.therouter.idea.isAndroid
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
 import com.intellij.openapi.editor.markup.GutterIconRenderer
@@ -40,11 +41,16 @@ class LineMarkerUtils2 : LineMarkerFunction {
 
     private fun findAllTheRouterPsi(rootElement: PsiElement) {
         val scopes = GlobalSearchScope.projectScope(rootElement.project)
-        val kotlinFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "kt", scopes)
-        val javaFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "java", scopes)
         val allFile = ArrayList<VirtualFile>()
-        allFile.addAll(kotlinFiles)
-        allFile.addAll(javaFiles)
+        if (isAndroid()) {
+            val kotlinFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "kt", scopes)
+            val javaFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "java", scopes)
+            allFile.addAll(kotlinFiles)
+            allFile.addAll(javaFiles)
+        } else {
+            val etsFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "ets", scopes)
+            allFile.addAll(etsFiles)
+        }
         allFile.forEach { virtualFile ->
             // 如果当前遍历的文件没有缓存标记，就添加缓存
             if (allTheRouterPsi[virtualFile.canonicalPath] == null) {
@@ -136,7 +142,7 @@ class LineMarkerUtils2 : LineMarkerFunction {
                             if (codeWrapper.psiElement.getKey().contains("action(")) {
                                 builder.setTooltipTitle("未定义 ActionInterceptor(${codeWrapper.code})")
                             } else {
-                                builder.setTooltipTitle("未声明 @Route(path=${codeWrapper.code})")
+                                builder.setTooltipTitle(if (isAndroid()) "未声明 @Route(path=${codeWrapper.code})" else "未声明 @Route({path:${codeWrapper.code}})")
                             }
                         }
                     }

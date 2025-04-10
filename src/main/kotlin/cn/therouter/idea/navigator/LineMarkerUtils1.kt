@@ -1,5 +1,6 @@
 package cn.therouter.idea.navigator
 
+import cn.therouter.idea.isAndroid
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.navigation.NavigationGutterIconBuilder
 import com.intellij.openapi.editor.markup.GutterIconRenderer
@@ -30,11 +31,16 @@ class LineMarkerUtils1 : LineMarkerFunction {
 
     private fun findAllTheRouterPsi(rootElement: PsiElement) {
         val scopes = GlobalSearchScope.projectScope(rootElement.project)
-        val kotlinFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "kt", scopes)
-        val javaFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "java", scopes)
         val allFile = ArrayList<VirtualFile>()
-        allFile.addAll(kotlinFiles)
-        allFile.addAll(javaFiles)
+        if (isAndroid()) {
+            val kotlinFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "kt", scopes)
+            val javaFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "java", scopes)
+            allFile.addAll(kotlinFiles)
+            allFile.addAll(javaFiles)
+        } else {
+            val etsFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "ets", scopes)
+            allFile.addAll(etsFiles)
+        }
 
         val currentFile = rootElement.containingFile.viewProvider.virtualFile
         allFile.forEach { virtualFile ->

@@ -15,9 +15,7 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <codeInsight.lineMarkerProvider language="kotlin"
-                                        implementationClass="cn.therouter.idea.navigator.TheRouterLineMarker"/>
-        <codeInsight.lineMarkerProvider language="JAVA"
+        <codeInsight.lineMarkerProvider language=""
                                         implementationClass="cn.therouter.idea.navigator.TheRouterLineMarker"/>
         <notificationGroup id="router" displayType="BALLOON"/>
     </extensions>

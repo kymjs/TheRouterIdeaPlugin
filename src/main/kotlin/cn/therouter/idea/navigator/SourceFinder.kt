@@ -1,5 +1,6 @@
 package cn.therouter.idea.navigator
 
+import cn.therouter.idea.isAndroid
 import com.intellij.psi.PsiElement
 import java.util.*
 
@@ -10,19 +11,24 @@ val therouterCodeCache = HashMap<String, Boolean>()
  */
 fun getRouteAnnotationCode(psiElement: PsiElement): CodeWrapper? {
     if (isRouteAnnotation(psiElement)) {
-        val content = psiElement.getKey().replace("@Route(", "").replace(")", "")
+        val content = if (isAndroid()) {
+            psiElement.getKey().replace("@Route(", "").replace(")", "")
+        } else {
+            psiElement.getKey().replace("@Route({", "").replace("})", "")
+        }
 
         val allParams = content.split(",")
 
         var path = ""
         for (param in allParams) {
-            if (param.startsWith("path=")) {
+            if (param.startsWith("path=") || param.startsWith("path:")) {
                 path = param.substring("path=".length)
                 break
             }
         }
         if (path.isNotBlank()) {
-            return CodeWrapper(TYPE_ROUTE_ANNOTATION, handlePath(path), psiElement)
+            val p = handlePath(path)
+            return CodeWrapper(TYPE_ROUTE_ANNOTATION, p, psiElement)
         }
     }
     return null
@@ -107,27 +113,51 @@ fun isTheRouterAddActionInterceptor(psiElement: PsiElement, path: String = ""): 
 }
 
 fun isRouteAnnotation(psiElement: PsiElement, path: String = ""): Boolean {
-    val content = psiElement.getKey()
-    val cache = therouterCodeCache["isRouteAnnotation$content$path"]
-    if (cache != null) {
-        return cache
-    }
-    val containPath = if (path.isEmpty()) {
-        content.contains("path=")
+    if (isAndroid()) {
+        val content = psiElement.getKey()
+        val cache = therouterCodeCache["isRouteAnnotation$content$path"]
+        if (cache != null) {
+            return cache
+        }
+        val containPath = if (path.isEmpty()) {
+            content.contains("path=")
+        } else {
+            content.contains(Regex("path=(\\S*\\.)*${handlePath(path)},"))
+                    || content.contains(Regex("path=(\\S*\\.)*${handlePath(path)}\\)"))
+        }
+        var result = false
+        if (containPath && content.startsWith("@Route(") && content.endsWith(")")) {
+            val str = content.replaceFirst("@Route(", "").replaceFirst(")", "")
+            result = !str.contains("@Route") && !str.contains(")")
+        }
+        therouterCodeCache["isRouteAnnotation$content$path"] = result
+        if (result && path.isNotEmpty()) {
+            therouterCodeCache["isRouteAnnotation$content"] = true
+        }
+        return result
     } else {
-        content.contains(Regex("path=(\\S*\\.)*${handlePath(path)},"))
-                || content.contains(Regex("path=(\\S*\\.)*${handlePath(path)}\\)"))
+        val content = psiElement.getKey()
+        val cache = therouterCodeCache["isRouteAnnotation$content$path"]
+        if (cache != null) {
+            return cache
+        }
+        val containPath = if (path.isEmpty()) {
+            content.contains("path:")
+        } else {
+            content.contains(Regex("path:(\\S*\\.)*${handlePath(path)},"))
+                    || content.contains(Regex("path:(\\S*\\.)*${handlePath(path)}\\)"))
+        }
+        var result = false
+        if (containPath && content.startsWith("@Route({") && content.endsWith("})")) {
+            val str = content.replaceFirst("@Route({", "").replaceFirst("})", "")
+            result = !str.contains("@Route") && !str.contains("})")
+        }
+        therouterCodeCache["isRouteAnnotation$content$path"] = result
+        if (result && path.isNotEmpty()) {
+            therouterCodeCache["isRouteAnnotation$content"] = true
+        }
+        return result
     }
-    var result = false
-    if (containPath && content.startsWith("@Route(") && content.endsWith(")")) {
-        val str = content.replaceFirst("@Route(", "").replaceFirst(")", "")
-        result = !str.contains("@Route") && !str.contains(")")
-    }
-    therouterCodeCache["isRouteAnnotation$content$path"] = result
-    if (result && path.isNotEmpty()) {
-        therouterCodeCache["isRouteAnnotation$content"] = true
-    }
-    return result
 }
 
 fun handlePath(path: String): String {
