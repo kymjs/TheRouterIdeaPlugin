@@ -35,8 +35,13 @@ class HMRouterTransfer : ITransfer {
         handleETSFile()
         logFile.appendText("---------------------------------------------------------\n\n")
         if (todoCustomChangeClass.isEmpty()) {
+            logFile.appendText("恭喜您，已全部转换完成。\n")
+        } else {
+            logFile.appendText("已部分转换完成，由于HMRouter实现不同，你还需要手动修改如下部分的文件。\n")
+            todoCustomChangeClass.forEach {
+                logFile.appendText("$it\n")
+            }
         }
-        logFile.appendText("恭喜您，已全部转换完成。\n")
         logFile.appendText("您还需要手动解决编译报错的部分（解决方式已经都给出在报错位置）\n")
         logFile.appendText("详细转换说明，请查阅官网文档：https://therouter.cn/docs/2022/09/05/01\n")
     }
@@ -70,6 +75,7 @@ class HMRouterTransfer : ITransfer {
             file.writeText(text)
         }
     }
+
     private fun handleJson5File() {
         json5FileContentMap.keys.forEach { file ->
             val text = json5FileContentMap[file]
@@ -157,9 +163,17 @@ class HMRouterTransfer : ITransfer {
             text = transformPushString(text)
             text = transformReplaceString(text)
                 .replace("HMNavigation", "TheRouterPage")
+                .replace("@HMService({ serviceName", "@Action({ action")
                 .replace("HMRouterMgr.getCurrentParam", "TheRouter.getCurrentParam")
                 .replace("HMRouterMgr.getService<", "TheRouter.get<")
                 .replace("@HMServiceProvider", "\n这个类还要手动实现 IServiceProvider 接口\n@ServiceProvider")
+            if (text.contains("@HMLifecycle")
+                || text.contains("@HMInterceptor")
+                || text.contains("@HMAnimator")
+            ) {
+                todoCustomChangeClass.add(file.absolutePath)
+            }
+
             file.writeText(text)
         }
     }
