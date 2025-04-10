@@ -2,6 +2,7 @@ package cn.therouter.idea.transfer.hmrouter
 
 import cn.therouter.idea.transfer.ITransfer
 import java.io.File
+import java.util.regex.Pattern
 
 class HMRouterTransfer : ITransfer {
 
@@ -83,9 +84,81 @@ class HMRouterTransfer : ITransfer {
             val pattern = Regex("HMRouterMgr\\.init\\(\\s*\\{[^}]*\\}\\)")
             return pattern.replace(input, "TheRouter.init(this.context)")
         }
+
+        fun replaceRouterAnnotation(input: String): String {
+            val pattern = """@HMRouter\(\s*\{\s*pageUrl\s*:\s*'([^'\s]*)'([^)]*)\}\s*\)""".toRegex()
+            return pattern.replace(input) { matchResult ->
+                val (pageUrl, rest) = matchResult.destructured
+                // 检查是否有 singleton 属性
+                val singletonPattern = """singleton\s*:\s*(true|false)""".toRegex()
+                val singletonMatch = singletonPattern.find(rest)
+                val singletonPart = if (singletonMatch != null) {
+                    ", ${singletonMatch.value}"
+                } else {
+                    ""
+                }
+                "@Route({ path: '$pageUrl'$singletonPart })"
+            }
+        }
+
+        fun replaceRouterAnnotation2(input: String): String {
+            val pattern = """@HMRouter\(\s*\{\s*pageUrl\s*:\s*"([^"\s]*)"([^)]*)\}\s*\)""".toRegex()
+            return pattern.replace(input) { matchResult ->
+                val (pageUrl, rest) = matchResult.destructured
+                // 检查是否有 singleton 属性
+                val singletonPattern = """singleton\s*:\s*(true|false)""".toRegex()
+                val singletonMatch = singletonPattern.find(rest)
+                val singletonPart = if (singletonMatch != null) {
+                    ", ${singletonMatch.value}"
+                } else {
+                    ""
+                }
+                "@Route({ path: '$pageUrl'$singletonPart })"
+            }
+        }
+
+        fun transformPushString(input: String): String {
+            val pattern1 = Regex("HMRouterMgr\\.push\\(\\s*\\{\\s*pageUrl\\s*:\\s*['\"]([^'\"\\s]*)['\"].*?\\}\\)")
+            val pattern2 =
+                Regex("HMRouterMgr\\.push\\(\\s*\\{\\s*pageUrl\\s*:\\s*['\"]([^'\"\\s]*)['\"].*?param\\s*:\\s*\\{(.*?)\\}[^)]*\\}\\)")
+            val match2 = pattern2.find(input)
+            if (match2 != null) {
+                val (pageUrl, params) = match2.destructured
+                return "TheRouter.build('$pageUrl').with({${params.trim()}}).navigation()"
+            }
+            val match1 = pattern1.find(input)
+            if (match1 != null) {
+                val (pageUrl) = match1.destructured
+                return "TheRouter.build('$pageUrl').navigation()"
+            }
+            return input
+        }
+
+        fun transformReplaceString(input: String): String {
+            val pattern1 = Regex("HMRouterMgr\\.replace\\(\\s*\\{\\s*pageUrl\\s*:\\s*['\"]([^'\"\\s]*)['\"].*?\\}\\)")
+            val pattern2 =
+                Regex("HMRouterMgr\\.replace\\(\\s*\\{\\s*pageUrl\\s*:\\s*['\"]([^'\"\\s]*)['\"].*?param\\s*:\\s*\\{(.*?)\\}[^)]*\\}\\)")
+            val match2 = pattern2.find(input)
+            if (match2 != null) {
+                val (pageUrl, params) = match2.destructured
+                return "TheRouter.build('$pageUrl').with({${params.trim()}}).replace()"
+            }
+            val match1 = pattern1.find(input)
+            if (match1 != null) {
+                val (pageUrl) = match1.destructured
+                return "TheRouter.build('$pageUrl').replace()"
+            }
+            return input
+        }
         etsFileContentMap.keys.forEach { file ->
-            val text = replaceRouterInit(etsFileContentMap[file] ?: "")
+            var text = replaceRouterInit(etsFileContentMap[file] ?: "")
+            text = replaceRouterAnnotation(text)
+            text = replaceRouterAnnotation2(text)
+            text = transformPushString(text)
+            text = transformReplaceString(text)
                 .replace("HMNavigation", "TheRouterPage")
+                .replace("HMRouterMgr.getService<", "TheRouter.get<")
+                .replace("@HMServiceProvider", "\n这个类还要手动实现 IServiceProvider 接口\n@ServiceProvider")
             file.writeText(text)
         }
     }
