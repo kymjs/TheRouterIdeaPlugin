@@ -1,7 +1,13 @@
 package cn.therouter.idea.transfer.hmrouter
 
+import at.syntaxerror.json5.Json5Module
 import cn.therouter.idea.transfer.ITransfer
+import cn.therouter.idea.utils.getVersion
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.vfs.LocalFileSystem
 import java.io.File
+
 
 class HMRouterTransfer : ITransfer {
 
@@ -27,23 +33,30 @@ class HMRouterTransfer : ITransfer {
         logFile.appendText("开始生成遍历索引，请稍候...\n")
         createIndex(projectFile)
         logFile.appendText("---------------------------------------------------------\n")
-        logFile.appendText("开始修改 TheRouter 依赖文件 ...\n")
+        logFile.appendText("开始修改工程依赖文件 ...\n")
         handleHvigorFile()
         handleJson5File()
         logFile.appendText("---------------------------------------------------------\n")
         logFile.appendText("开始替换 .ets 代码...\n")
         handleETSFile()
-        logFile.appendText("---------------------------------------------------------\n\n")
+        logFile.appendText("---------------------------------------------------------\n")
         if (todoCustomChangeClass.isEmpty()) {
             logFile.appendText("恭喜您，已全部转换完成。\n")
         } else {
-            logFile.appendText("已部分转换完成，由于HMRouter实现不同，你还需要手动修改如下部分的文件。\n")
+            logFile.appendText("已部分转换完成，由于HMRouter实现不同，你还需要手动修改如下部分的文件。\n\n")
             todoCustomChangeClass.forEach {
                 logFile.appendText("$it\n")
             }
         }
-        logFile.appendText("您还需要手动解决编译报错的部分（解决方式已经都给出在报错位置）\n")
+        logFile.appendText("---------------------------------------------------------\n")
+        logFile.appendText("\n您还需要手动解决编译报错的部分（解决方式已经都给出在报错位置）\n")
         logFile.appendText("详细转换说明，请查阅官网文档：https://therouter.cn/docs/2022/09/05/01\n")
+
+        val project = ProjectManager.getInstance().openProjects[0]
+        val file = LocalFileSystem.getInstance().findFileByPath(logFile.absolutePath)
+        if (file != null) {
+            FileEditorManager.getInstance(project).openFile(file, true)
+        }
     }
 
     /**
@@ -55,14 +68,16 @@ class HMRouterTransfer : ITransfer {
                 etsFileContentMap[root] = root.readText()
             } else if (root.name == "hvigorfile.ts") {
                 jsFileContentMap[root] = root.readText()
-            } else if (root.name == "oh-package.json5") {
+            } else if (root.name == "oh-package.json5" || root.name == "hvigor-config.json5") {
                 json5FileContentMap[root] = root.readText()
             } else if (root.name == "hmrouter_config.json") {
                 root.renameTo(File(root.parentFile, "therouter_build_config.json"))
             }
         } else {
-            root.listFiles()?.forEach { file ->
-                createIndex(file)
+            if (root.name != ".hvigor" && root.name != "oh_modules" && root.name != "build") {
+                root.listFiles()?.forEach { file ->
+                    createIndex(file)
+                }
             }
         }
     }
@@ -70,18 +85,36 @@ class HMRouterTransfer : ITransfer {
     private fun handleHvigorFile() {
         jsFileContentMap.keys.forEach { file ->
             val text = jsFileContentMap[file]
-                ?.replace("@hadss/hmrouter-plugin", "therouter-plugin\"这里版本号需要修改")
+                ?.replace("@hadss/hmrouter-plugin", "therouter-plugin")
                 ?: ""
             file.writeText(text)
         }
     }
 
+    private val HMROUTER_LIBRARY = "@hadss/hmrouter"
+    private val HMROUTER_PLUGIN = "@hadss/hmrouter-plugin"
+
     private fun handleJson5File() {
+        fun replaceHMRouter(input: String): String {
+            val pattern = """("$HMROUTER_LIBRARY"\s*:\s*")[^"]*(")""".toRegex()
+            return pattern
+                .replace(input, "$1${getVersion().latestHarmonyVersion}$2")
+                .replace(HMROUTER_LIBRARY, "@hll/therouter")
+        }
+
+        fun replaceHMRouterPlugin(input: String): String {
+            val pattern = """("$HMROUTER_PLUGIN"\s*:\s*")[^"]*(")""".toRegex()
+            return pattern
+                .replace(input, "$1${getVersion().latestHarmonyVersion}$2")
+                .replace(HMROUTER_PLUGIN, "therouter-plugin")
+        }
         json5FileContentMap.keys.forEach { file ->
-            val text = json5FileContentMap[file]
-                ?.replace("@hadss/hmrouter", "@hll/therouter\"这里版本号需要修改")
-                ?: ""
-            file.writeText(text)
+            val text = json5FileContentMap[file] ?: ""
+            if (text.contains(HMROUTER_PLUGIN)) {
+                file.writeText(replaceHMRouterPlugin(text))
+            } else if (text.contains(HMROUTER_LIBRARY)) {
+                file.writeText(replaceHMRouter(text))
+            }
         }
     }
 
@@ -164,10 +197,14 @@ class HMRouterTransfer : ITransfer {
             text = transformReplaceString(text)
                 .replace("HMNavigation", "TheRouterPage")
                 .replace("@hadss/hmrouter", "@hll/therouter")
+                .replace("HMRouterMgr.pop(", "TheRouter.build().pop(")
                 .replace("@HMService({ serviceName", "@Action({ action")
                 .replace("HMRouterMgr.getCurrentParam", "TheRouter.getCurrentParam")
                 .replace("HMRouterMgr.getService<", "TheRouter.get<")
                 .replace("@HMServiceProvider", "\n这个类还要手动实现 IServiceProvider 接口\n@ServiceProvider")
+                .replace("HMRouterMgr", "TheRouter") // 必须放到最后
+                .replace("HMRouter", "Route") // 必须放到最后
+                .replace("HMService", "Action") // 必须放到最后
             if (text.contains("@HMLifecycle")
                 || text.contains("@HMInterceptor")
                 || text.contains("@HMAnimator")

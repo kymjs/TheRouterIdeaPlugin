@@ -1,6 +1,9 @@
 package cn.therouter.idea.transfer.arouter
 
 import cn.therouter.idea.transfer.ITransfer
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.vfs.LocalFileSystem
 import java.io.File
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -66,6 +69,11 @@ class ARouterTransfer : ITransfer {
             logFile.appendText("2. 您还需要手动判断 with()方法的使用，建议全局搜索关键字：.with(  来查看使用位置有哪些。\n")
         }
         logFile.appendText("详细转换说明，请查阅官网文档：https://therouter.cn/docs/2022/09/05/01\n")
+        val project = ProjectManager.getInstance().openProjects[0]
+        val file = LocalFileSystem.getInstance().findFileByPath(logFile.absolutePath)
+        if (file != null) {
+            FileEditorManager.getInstance(project).openFile(file, true)
+        }
     }
 
 
