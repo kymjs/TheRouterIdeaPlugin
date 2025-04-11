@@ -12,34 +12,48 @@ import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 
+
+private const val NONE = -1
+private const val FINDDING = 0
+private const val FINISH = 1
+
 /**
- * 内存占用最低，只首次扫描工程，每5s返回一次结果
+ * 内存占用最低，只首次扫描工程
  */
-class LineMarkerUtils2 : LineMarkerFunction {
+class LineMarkerUtils : LineMarkerFunction {
 
     // VirtualFilePath, All LineMarker Code
     private val allTheRouterPsi = HashMap<String, HashSet<CodeWrapper>>()
 
-    private var findAllFinish = false
+    private var findAllFinish = NONE
 
     override fun main(elements: MutableList<out PsiElement>): Collection<LineMarkerInfo<*>> {
-        val currentFile = elements[0].containingFile.viewProvider.virtualFile
+        init(elements[0], true)
+        return createAllLineMark(elements[0])
+    }
+
+    override fun create(element: PsiElement): LineMarkerInfo<*>? {
+        init(element, false)
+        return createLineMark(element)
+    }
+
+    private fun init(element: PsiElement, update: Boolean) {
+        val currentFile = element.containingFile.viewProvider.virtualFile
         val currentPath = currentFile.canonicalPath ?: ""
         if (currentPath.isEmpty()) {
-            return ArrayList()
+            return
         }
-
-        if (!findAllFinish) {
-            findAllTheRouterPsi(elements[0])
+        if (findAllFinish != FINISH) {
+            findAllTheRouterPsi(element)
         } else {
-            updateTheRouterPsi(elements[0].project, currentFile)
+            if (update) {
+                updateTheRouterPsi(element.project, currentFile)
+            }
         }
-
-        val result = createLineMark(currentPath)
-        return result
     }
 
     private fun findAllTheRouterPsi(rootElement: PsiElement) {
+        findAllFinish = FINDDING
         val scopes = GlobalSearchScope.projectScope(rootElement.project)
         val allFile = ArrayList<VirtualFile>()
         if (isAndroid()) {
@@ -52,12 +66,14 @@ class LineMarkerUtils2 : LineMarkerFunction {
             allFile.addAll(etsFiles)
         }
         allFile.forEach { virtualFile ->
-            // 如果当前遍历的文件没有缓存标记，就添加缓存
-            if (allTheRouterPsi[virtualFile.canonicalPath] == null) {
-                updateTheRouterPsi(rootElement.project, virtualFile)
+            if (virtualFile.canonicalPath?.contains("/node_modules/") != true) {
+                // 如果当前遍历的文件没有缓存标记，就添加缓存
+                if (allTheRouterPsi[virtualFile.canonicalPath] == null) {
+                    updateTheRouterPsi(rootElement.project, virtualFile)
+                }
             }
         }
-        findAllFinish = true
+        findAllFinish = FINISH
     }
 
     /**
@@ -74,13 +90,15 @@ class LineMarkerUtils2 : LineMarkerFunction {
                     codeWrapperSet.add(codeWrapper)
                 }
             }
+            debug("LineMarkerUtils2", "virtualFilePath:$virtualFilePath has ${codeWrapperSet.size} marker")
             allTheRouterPsi[virtualFilePath] = codeWrapperSet
         }
     }
 
-    private fun createLineMark(virtualFilePath: String): Collection<LineMarkerInfo<*>> {
-        val result = HashSet<LineMarkerInfo<*>>()
-        allTheRouterPsi[virtualFilePath]?.forEach { codeWrapper ->
+    private fun createLineMark(element: PsiElement): LineMarkerInfo<*>? {
+        val currentPath = element.currentContainingFile()?.viewProvider?.virtualFile?.canonicalPath ?: ""
+        val c = getRouteAnnotationCode(element) ?: getTheRouterBuildCode(element) ?: getActionInterceptorCode(element)
+        c?.let { codeWrapper ->
             val targetList = ArrayList<TargetPsiElement>()
             try {
                 when (codeWrapper.type) {
@@ -102,7 +120,8 @@ class LineMarkerUtils2 : LineMarkerFunction {
                         }
                     }
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                debug("createLineMark", "error1::${currentPath},${e.stackTraceToString()}")
             }
             try {
                 // 排序后去重，只保留代码部分最长的psi
@@ -126,8 +145,96 @@ class LineMarkerUtils2 : LineMarkerFunction {
                     } else {
                         builder.setTooltipTitle("TheRouter:跳转到声明处")
                     }
-                    val marker = builder.createLineMarkerInfo(codeWrapper.psiElement.toTargetPsi())
-                    result.add(marker)
+                    try {
+                        return builder.createLineMarkerInfo(codeWrapper.psiElement.toTargetPsi())
+                    } catch (e: Exception) {
+                    }
+                } else {
+                    val builder = NavigationGutterIconBuilder.create(getIcon(TYPE_NONE))
+                        .setAlignment(GutterIconRenderer.Alignment.CENTER)
+                        .setTargets(targetList)
+                    if (codeWrapper.type == TYPE_ROUTE_ANNOTATION || codeWrapper.type == TYPE_ACTION_INTERCEPT) {
+                        builder.setTooltipTitle("未发现使用:TheRouter.build(${codeWrapper.code})")
+                    } else {
+                        val path = codeWrapper.code
+                        if (!path.contains('"') && !path.isFirstUpper()) {
+                            builder.setTooltipTitle("变量 ${codeWrapper.code} 内容未知，请检查是否定义路由")
+                        } else {
+                            if (codeWrapper.psiElement.getKey().contains("action(")) {
+                                builder.setTooltipTitle("未定义 ActionInterceptor(${codeWrapper.code})")
+                            } else {
+                                builder.setTooltipTitle(if (isAndroid()) "未声明 @Route(path=${codeWrapper.code})" else "未声明 @Route({path:${codeWrapper.code}})")
+                            }
+                        }
+                    }
+                    return builder.createLineMarkerInfo(codeWrapper.psiElement.toTargetPsi())
+                }
+            } catch (e: Exception) {
+                debug("createLineMark", "error2::$currentPath,${e.stackTraceToString()}")
+            }
+        }
+        return null
+    }
+
+    private fun createAllLineMark(element: PsiElement): Collection<LineMarkerInfo<*>> {
+        val currentPath = element.currentContainingFile()?.viewProvider?.virtualFile?.canonicalPath ?: ""
+        val result = HashSet<LineMarkerInfo<*>>()
+        if (currentPath.isEmpty()) {
+            return result
+        }
+        allTheRouterPsi[currentPath]?.forEach { codeWrapper ->
+            val targetList = ArrayList<TargetPsiElement>()
+            try {
+                when (codeWrapper.type) {
+                    TYPE_ROUTE_ANNOTATION -> {
+                        getAllTheRouterBuildTargetPsi(codeWrapper.code).forEach { targetPsi ->
+                            targetList.add(targetPsi)
+                        }
+                    }
+
+                    TYPE_THEROUTER_BUILD -> {
+                        getAllRouteAnnotationOrActionInterceptTargetPsi(codeWrapper.code).forEach { targetPsi ->
+                            targetList.add(targetPsi)
+                        }
+                    }
+
+                    TYPE_ACTION_INTERCEPT -> {
+                        getAllTheRouterBuildTargetPsi(codeWrapper.code).forEach { targetPsi ->
+                            targetList.add(targetPsi)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                debug("createLineMark", "error1::$currentPath,${e.stackTraceToString()}")
+            }
+            try {
+                // 排序后去重，只保留代码部分最长的psi
+                targetList.sort()
+                val newList = ArrayList<TargetPsiElement>()
+                targetList.forEach {
+                    if (!newList.contains(it)) {
+                        newList.add(it)
+                    }
+                }
+                targetList.clear()
+                targetList.addAll(newList)
+
+                if (targetList.isNotEmpty()) {
+                    targetList.sort()
+                    val builder = NavigationGutterIconBuilder.create(getIcon(codeWrapper.type))
+                        .setAlignment(GutterIconRenderer.Alignment.CENTER)
+                        .setTargets(targetList)
+                    if (codeWrapper.type == TYPE_ROUTE_ANNOTATION || codeWrapper.type == TYPE_ACTION_INTERCEPT) {
+                        builder.setTooltipTitle("TheRouter:跳转到使用处")
+                    } else {
+                        builder.setTooltipTitle("TheRouter:跳转到声明处")
+                    }
+                    try {
+                        val marker = builder.createLineMarkerInfo(codeWrapper.psiElement.toTargetPsi())
+                        result.add(marker)
+                    } catch (e: Exception) {
+                        debug("createLineMark", "error3::$currentPath,${e.stackTraceToString()}")
+                    }
                 } else {
                     val builder = NavigationGutterIconBuilder.create(getIcon(TYPE_NONE))
                         .setAlignment(GutterIconRenderer.Alignment.CENTER)
@@ -149,7 +256,8 @@ class LineMarkerUtils2 : LineMarkerFunction {
                     // 未定义的不加入 showStatusCache 缓存，直接加入结果集，下次重新获取
                     result.add(builder.createLineMarkerInfo(codeWrapper.psiElement.toTargetPsi()))
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                debug("createLineMark", "error2::$currentPath,${e.stackTraceToString()}")
             }
         }
         return result

@@ -70,10 +70,20 @@ fun PsiElement.getKey(): String {
     return text.replace(" ", "").replace("\n", "")
 }
 
-fun PsiElement.getFileName() = containingFile.name
+fun PsiElement.getFileName() = try {
+    currentContainingFile()?.name ?: ""
+} catch (e: Exception) {
+    ""
+}
+
+fun PsiElement.currentContainingFile() = try {
+    containingFile
+} catch (e: Exception) {
+    null
+}
 
 fun PsiElement.getLineNumber(): Int {
-    val document: Document? = PsiDocumentManager.getInstance(project).getDocument(containingFile)
+    val document: Document? = currentContainingFile()?.let { PsiDocumentManager.getInstance(project).getDocument(it) }
     if (document != null) {
         val textRange: TextRange = textRange
         val startLineNumber: Int = document.getLineNumber(textRange.startOffset)
