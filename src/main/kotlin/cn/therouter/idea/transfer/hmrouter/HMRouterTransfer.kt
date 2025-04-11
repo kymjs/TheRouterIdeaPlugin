@@ -70,7 +70,7 @@ class HMRouterTransfer : ITransfer {
     private fun handleHvigorFile() {
         jsFileContentMap.keys.forEach { file ->
             val text = jsFileContentMap[file]
-                ?.replace("@hadss/hmrouter-plugin", "@hll/therouter-plugin\"这里版本号需要修改")
+                ?.replace("@hadss/hmrouter-plugin", "therouter-plugin\"这里版本号需要修改")
                 ?: ""
             file.writeText(text)
         }
@@ -163,6 +163,7 @@ class HMRouterTransfer : ITransfer {
             text = transformPushString(text)
             text = transformReplaceString(text)
                 .replace("HMNavigation", "TheRouterPage")
+                .replace("@hadss/hmrouter", "@hll/therouter")
                 .replace("@HMService({ serviceName", "@Action({ action")
                 .replace("HMRouterMgr.getCurrentParam", "TheRouter.getCurrentParam")
                 .replace("HMRouterMgr.getService<", "TheRouter.get<")
