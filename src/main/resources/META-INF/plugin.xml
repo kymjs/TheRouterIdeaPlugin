@@ -9,7 +9,7 @@
     Read more document: <br>
     <a href="https://therouter.cn/docs/2022/09/29/01">https://therouter.cn</a><br><br>
     Contact me on WeChat for more usage questions: <b>kymjs123</b><br>
-    <img src="https://plugins.jetbrains.com/files/20047/screenshot_f637ffd6-bbaa-432a-ba24-1ed84bad5b15">]]></description>
+    <img src="https://plugins.jetbrains.com/files/20047/screenshot_d90b186a-ed23-4fd0-9afe-7f042b6aaa70">]]></description>
 
     <depends>com.intellij.modules.lang</depends>
     <depends>com.intellij.modules.platform</depends>
@@ -27,7 +27,7 @@
     <actions>
         <action class="cn.therouter.idea.transfer.TransferAction"
                 id="Transfer"
-                text="TheRouter·一键迁移工具"
+                text="TheRouter·一键迁移"
                 description="Transfer to theRouter">
             <keyboard-shortcut first-keystroke="control shift 1" keymap="$default"/>
             <add-to-group group-id="ToolsMenu" anchor="last"/>
@@ -35,7 +35,7 @@
 
         <action class="cn.therouter.idea.about.VersionAction"
                 id="Version"
-                text="TheRouter·检查最新依赖"
+                text="TheRouter·最新版本"
                 description="Upgrade therouter version">
             <keyboard-shortcut first-keystroke="control shift 2" keymap="$default"/>
             <add-to-group group-id="ToolsMenu" anchor="last"/>
