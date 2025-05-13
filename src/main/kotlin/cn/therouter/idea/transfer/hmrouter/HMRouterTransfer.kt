@@ -85,7 +85,7 @@ class HMRouterTransfer : ITransfer {
     private fun handleHvigorFile() {
         jsFileContentMap.keys.forEach { file ->
             val text = jsFileContentMap[file]
-                ?.replace("@hadss/hmrouter-plugin", "therouter-plugin")
+                ?.replace("@hadss/hmrouter-plugin", "@therouter/plugin")
                 ?: ""
             file.writeText(text)
         }
@@ -99,14 +99,14 @@ class HMRouterTransfer : ITransfer {
             val pattern = """("$HMROUTER_LIBRARY"\s*:\s*")[^"]*(")""".toRegex()
             return pattern
                 .replace(input, "$1${getVersion().latestHarmonyVersion}$2")
-                .replace(HMROUTER_LIBRARY, "@hll/therouter")
+                .replace(HMROUTER_LIBRARY, "@therouter/library")
         }
 
         fun replaceHMRouterPlugin(input: String): String {
             val pattern = """("$HMROUTER_PLUGIN"\s*:\s*")[^"]*(")""".toRegex()
             return pattern
                 .replace(input, "$1${getVersion().latestHarmonyVersion}$2")
-                .replace(HMROUTER_PLUGIN, "therouter-plugin")
+                .replace(HMROUTER_PLUGIN, "@therouter/plugin")
         }
         json5FileContentMap.keys.forEach { file ->
             val text = json5FileContentMap[file] ?: ""
@@ -196,7 +196,7 @@ class HMRouterTransfer : ITransfer {
             text = transformPushString(text)
             text = transformReplaceString(text)
                 .replace("HMNavigation", "TheRouterPage")
-                .replace("@hadss/hmrouter", "@hll/therouter")
+                .replace("@hadss/hmrouter", "@therouter/library")
                 .replace("HMRouterMgr.pop(", "TheRouter.build().pop(")
                 .replace("@HMService({ serviceName", "@Action({ action")
                 .replace("HMRouterMgr.getCurrentParam", "TheRouter.getCurrentParam")
