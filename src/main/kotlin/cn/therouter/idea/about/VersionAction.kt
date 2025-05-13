@@ -17,7 +17,7 @@ import java.util.regex.Pattern
 class VersionAction : AnAction() {
 
     override fun actionPerformed(event: AnActionEvent) {
-        if (isAndroid()) {
+        if (isAndroid(event.project)) {
             val currentVersion = event.project?.basePath?.let { foundCurrentVersion(File(it)) } ?: "UnKnow"
             val version = getVersion(currentVersion)
             if (MessageDialogBuilder
@@ -64,7 +64,7 @@ private fun foundHarmonyVersion(projectDir: File): String {
                 val jsonContent = file.readText()
                 debug("json", jsonContent)
                 val json5 = j5.decodeObject(jsonContent)
-                return json5["dependencies"]?.jsonObject?.get("@hll/therouter").toString()
+                return json5["dependencies"]?.jsonObject?.get("@therouter/library").toString()
             }
         }
     }

@@ -11,7 +11,7 @@ val therouterCodeCache = HashMap<String, Boolean>()
  */
 fun getRouteAnnotationCode(psiElement: PsiElement): CodeWrapper? {
     if (isRouteAnnotation(psiElement)) {
-        val content = if (isAndroid()) {
+        val content = if (isAndroid(psiElement.project)) {
             psiElement.getKey().replace("@Route(", "").replace(")", "")
         } else {
             psiElement.getKey().replace("@Route({", "").replace("})", "")
@@ -113,7 +113,7 @@ fun isTheRouterAddActionInterceptor(psiElement: PsiElement, path: String = ""): 
 }
 
 fun isRouteAnnotation(psiElement: PsiElement, path: String = ""): Boolean {
-    if (isAndroid()) {
+    if (isAndroid(psiElement.project)) {
         val content = psiElement.getKey()
         val cache = therouterCodeCache["isRouteAnnotation$content$path"]
         if (cache != null) {

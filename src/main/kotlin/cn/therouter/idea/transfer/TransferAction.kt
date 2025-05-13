@@ -49,8 +49,8 @@ class TransferAction : AnAction() {
             val file = File(desktop, fileName)
             if (MessageDialogBuilder
                     .okCancel(
-                        if (isAndroid()) "TheRouter Android 一键迁移工具" else "TheRouter Harmony 一键迁移工具",
-                        if (isAndroid()) {
+                        if (isAndroid(event.project)) "TheRouter Android 一键迁移工具" else "TheRouter Harmony 一键迁移工具",
+                        if (isAndroid(event.project)) {
                             "当前项目为：$projectPath\n\n即将迁移至 TheRouter ${version.latestVersion}。迁移完成后，会在桌面生成改动日志。请注意查看：\n\n${file.absolutePath}。"
                         } else {
                             "当前项目为：$projectPath\n\n即将迁移至 TheRouter ${version.latestHarmonyVersion}。迁移完成后，会在桌面生成改动日志。请注意查看：\n\n${file.absolutePath}。"
@@ -61,7 +61,7 @@ class TransferAction : AnAction() {
                     .icon(Messages.getInformationIcon())
                     .ask(project)
             ) {
-                if (isAndroid()) {
+                if (isAndroid(event.project)) {
                     routerNameList["ARouter"]?.transfer(projectPath, version.latestVersion ?: "", file)
                 } else {
                     routerNameList["HMRouter"]?.transfer(projectPath, version.latestHarmonyVersion ?: "", file)

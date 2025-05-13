@@ -56,7 +56,7 @@ class LineMarkerUtils : LineMarkerFunction {
         findAllFinish = FINDDING
         val scopes = GlobalSearchScope.projectScope(rootElement.project)
         val allFile = ArrayList<VirtualFile>()
-        if (isAndroid()) {
+        if (isAndroid(rootElement.project)) {
             val kotlinFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "kt", scopes)
             val javaFiles = FilenameIndex.getAllFilesByExt(rootElement.project, "java", scopes)
             allFile.addAll(kotlinFiles)
@@ -163,7 +163,7 @@ class LineMarkerUtils : LineMarkerFunction {
                             if (codeWrapper.psiElement.getKey().contains("action(")) {
                                 builder.setTooltipTitle("未定义 ActionInterceptor(${codeWrapper.code})")
                             } else {
-                                builder.setTooltipTitle(if (isAndroid()) "未声明 @Route(path=${codeWrapper.code})" else "未声明 @Route({path:${codeWrapper.code}})")
+                                builder.setTooltipTitle(if (isAndroid(element.project)) "未声明 @Route(path=${codeWrapper.code})" else "未声明 @Route({path:${codeWrapper.code}})")
                             }
                         }
                     }
@@ -249,7 +249,7 @@ class LineMarkerUtils : LineMarkerFunction {
                             if (codeWrapper.psiElement.getKey().contains("action(")) {
                                 builder.setTooltipTitle("未定义 ActionInterceptor(${codeWrapper.code})")
                             } else {
-                                builder.setTooltipTitle(if (isAndroid()) "未声明 @Route(path=${codeWrapper.code})" else "未声明 @Route({path:${codeWrapper.code}})")
+                                builder.setTooltipTitle(if (isAndroid(element.project)) "未声明 @Route(path=${codeWrapper.code})" else "未声明 @Route({path:${codeWrapper.code}})")
                             }
                         }
                     }

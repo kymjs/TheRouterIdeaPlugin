@@ -8,7 +8,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 class GitHubFeedbackAction : AnAction() {
 
     override fun actionPerformed(event: AnActionEvent) {
-        val url = if (isAndroid()) {
+        val url = if (isAndroid(event.project)) {
             "https://github.com/HuolalaTech/hll-wp-therouter-android/issues/new"
         } else {
             "https://github.com/HuolalaTech/hll-wp-therouter-harmony/issues/new"
