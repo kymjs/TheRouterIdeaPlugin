@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "cn.therouter"
-version = "1.3.4"
+version = "1.3.5"
 
 repositories {
     maven("https://maven.therouter.cn:8443/repository/maven-public/")
@@ -24,11 +24,11 @@ dependencies {
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
     }
     withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "11"
+        kotlinOptions.jvmTarget = "17"
     }
 
     patchPluginXml {

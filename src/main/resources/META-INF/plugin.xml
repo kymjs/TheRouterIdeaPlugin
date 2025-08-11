@@ -15,6 +15,12 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="TheRouterAI"
+                    anchor="right"
+                    factoryClass="cn.therouter.idea.ai.TheRouterAI"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="com.intellij">
         <codeInsight.lineMarkerProvider language=""
                                         implementationClass="cn.therouter.idea.navigator.TheRouterLineMarker"/>
         <notificationGroup id="router" displayType="BALLOON"/>

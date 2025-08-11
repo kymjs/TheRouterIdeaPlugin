@@ -10,4 +10,6 @@ object RouteIcons {
     val icon_to = getIcon("/icons/icon_to.png", RouteIcons::class.java)
     @JvmField
     val icon_warn = getIcon("/icons/icon_warn.png", RouteIcons::class.java)
+    @JvmField
+    val logo = getIcon("/icons/logo.svg", RouteIcons::class.java)
 }
