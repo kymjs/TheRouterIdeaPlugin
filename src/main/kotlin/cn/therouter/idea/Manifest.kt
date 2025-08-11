@@ -7,12 +7,12 @@ import com.intellij.openapi.ui.MessageDialogBuilder
 import com.intellij.openapi.ui.Messages
 import java.io.File
 
-const val PLUGIN_VERSION_NAME = "1.3.4"
-const val PLUGIN_VERSION_CODE = 133
-const val LATEST_LIBRARY_VERSION_NAME = "1.3.0-rc3"
-const val RELEASE_LIBRARY_VERSION_NAME = "1.2.4"
-const val LATEST_HARMONY_VERSION_NAME = "1.0.0"
-const val RELEASE_HARMONY_VERSION_NAME = "1.0.0"
+const val PLUGIN_VERSION_NAME = "1.3.5"
+const val PLUGIN_VERSION_CODE = 135
+const val LATEST_LIBRARY_VERSION_NAME = "1.3.0"
+const val RELEASE_LIBRARY_VERSION_NAME = "1.3.0"
+const val LATEST_HARMONY_VERSION_NAME = "1.0.1"
+const val RELEASE_HARMONY_VERSION_NAME = "1.0.1"
 
 private const val NONE = -1
 private const val HARMONY = 0
