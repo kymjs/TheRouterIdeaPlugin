@@ -11,7 +11,7 @@
 加入 【TheRouter】 官方微信群：  
 *如过期，请加微信：kymjs123，拉你进群*
 
-<img src="https://cdn.kymjs.com:8843/therouter/wx/therouter_wx.jpg" width="40%" alt="TheRouter官方微信群：https://kymjs.com/therouter/wx/therouter_wx.jpg" />
+<img src="https://cdn.kymjs.com:8843/therouter_assets/img/therouter_wx_group.png" width="40%" alt="TheRouter官方微信群：https://cdn.kymjs.com:8843/therouter_assets/img/therouter_wx_group.png" />
 
 ### 二、开源协议
 
