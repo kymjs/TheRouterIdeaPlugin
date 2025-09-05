@@ -8,13 +8,10 @@
 
 **更多详细使用文档请查看项目官网 [https://therouter.cn/docs/2022/09/29/01](https://therouter.cn/docs/2022/09/29/01)**
 
-加入 【TheRouter】 官方微信群：  
-*如过期，请加微信：kymjs123，拉你进群*
-
-<img src="https://cdn.kymjs.com:8843/therouter_assets/img/therouter_wx_group.png" width="40%" alt="TheRouter官方微信群：https://cdn.kymjs.com:8843/therouter_assets/img/therouter_wx_group.png" />
+<img src="https://cdn.kymjs.com:8843/therouter_assets/img/therouter_wx_group.png" width="40%" alt="TheRouter官方微信群：https://cdn.kymjs.com:8843/therouter_assets/img/therouter_wx_group.png" /><img src="https://cdn.kymjs.com:8843/qiniu/image/qrcode_transfer.jpeg" width="50%" max-width="200" alt="在线乞讨"/>
 
 ### 二、开源协议
 
 TheRouter is licensed under the Apache License 2.0: [LICENSE](https://github.com/HuolalaTech/hll-wp-therouter-android/blob/master/LICENSE).  
 
-<img src="https://cdn.kymjs.com:8843/qiniu/image/qrcode_transfer.jpeg" width="50%" max-width="200" alt="在线乞讨"/>
+
